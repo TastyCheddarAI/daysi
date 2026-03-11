@@ -70,7 +70,7 @@ export interface DaysiAdminProviderSummary {
 export interface DaysiAdminRoleAssignment {
   id: string;
   email: string;
-  role: "staff" | "admin";
+  role: "staff" | "admin" | "owner";
   locationScopes: string[];
   createdAt: string;
   updatedAt: string;

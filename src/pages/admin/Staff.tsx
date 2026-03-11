@@ -72,7 +72,7 @@ export default function AdminStaff() {
   
   // Form state
   const [newStaffEmail, setNewStaffEmail] = useState("");
-  const [newStaffRole, setNewStaffRole] = useState<"staff" | "admin">("staff");
+  const [newStaffRole, setNewStaffRole] = useState<DaysiAdminRoleAssignment["role"]>("staff");
 
   const providersQuery = useDaysiAdminProviders(locationSlug);
   const assignmentsQuery = useDaysiAdminRoleAssignments();
@@ -261,7 +261,12 @@ export default function AdminStaff() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <h3 className="font-semibold truncate">{staff.email}</h3>
-                          {staff.role === "admin" ? (
+                          {staff.role === "owner" ? (
+                            <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/20">
+                              <ShieldCheck className="w-3 h-3 mr-1" />
+                              Owner
+                            </Badge>
+                          ) : staff.role === "admin" ? (
                             <Badge className="bg-red-500/10 text-red-600 border-red-500/20">
                               <ShieldCheck className="w-3 h-3 mr-1" />
                               Admin
