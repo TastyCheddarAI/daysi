@@ -1,0 +1,7 @@
+aws_region = "ca-central-1"
+
+billing_alert_emails = [
+  "alerts@daysi.ca",
+]
+
+monthly_budget_amount = 300

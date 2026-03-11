@@ -1,0 +1,16 @@
+FROM postgres:15-alpine
+
+WORKDIR /migrations
+COPY migrations/*.sql /migrations/
+
+RUN echo '#!/bin/sh' > /run.sh && \
+    echo 'set -e' >> /run.sh && \
+    echo 'cd /migrations' >> /run.sh && \
+    echo 'for f in *.sql; do' >> /run.sh && \
+    echo '  echo "Applying: $f"' >> /run.sh && \
+    echo '  psql "$DATABASE_URL" -f "$f"' >> /run.sh && \
+    echo 'done' >> /run.sh && \
+    echo 'echo "Migrations complete!"' >> /run.sh && \
+    chmod +x /run.sh
+
+ENTRYPOINT ["/run.sh"]

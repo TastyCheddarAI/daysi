@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <!-- Homepage - Highest Priority -->
+  <url>
+    <loc>https://laserhairremovalwinnipeg.ca/</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://laserhairremovalwinnipeg.ca/og-image.jpg</image:loc>
+      <image:title>Prairie Glow Beauty - Laser Hair Removal Niverville MB</image:title>
+      <image:caption>Premium skincare and laser treatments at Prairie Glow Beauty</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Core Services - High Priority -->
+  <url>
+    <loc>https://laserhairremovalwinnipeg.ca/services</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://laserhairremovalwinnipeg.ca/services/laser-hair-removal</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://laserhairremovalwinnipeg.ca/assets/glass-skin-portrait.jpg</image:loc>
+      <image:title>Laser Hair Removal Results Niverville MB</image:title>
+      <image:caption>Smooth, hair-free skin after professional laser hair removal treatment</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://laserhairremovalwinnipeg.ca/services/skin-rejuvenation</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://laserhairremovalwinnipeg.ca/assets/hero-face-3.jpg</image:loc>
+      <image:title>Skin Rejuvenation Treatment Results</image:title>
+      <image:caption>Radiant glowing skin after professional facial treatment</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://laserhairremovalwinnipeg.ca/services/anti-aging</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://laserhairremovalwinnipeg.ca/assets/hero-face-4.jpg</image:loc>
+      <image:title>Anti-Aging Treatment Results</image:title>
+      <image:caption>Youthful radiant skin after anti-aging treatment</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://laserhairremovalwinnipeg.ca/services/tattoo-removal</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://laserhairremovalwinnipeg.ca/assets/hero-face-2.jpg</image:loc>
+      <image:title>Tattoo Removal Treatment</image:title>
+      <image:caption>Clear smooth skin after professional laser tattoo removal</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Conversion Pages -->
+  <url>
+    <loc>https://laserhairremovalwinnipeg.ca/pricing</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://laserhairremovalwinnipeg.ca/booking</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://laserhairremovalwinnipeg.ca/contact</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Content Pages -->
+  <url>
+    <loc>https://laserhairremovalwinnipeg.ca/gallery</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <image:image>
+      <image:loc>https://laserhairremovalwinnipeg.ca/assets/before-after-1.jpg</image:loc>
+      <image:title>Before and After Results Gallery</image:title>
+      <image:caption>Client transformation photos from Prairie Glow Beauty treatments</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://laserhairremovalwinnipeg.ca/advisor</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://laserhairremovalwinnipeg.ca/treatment</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Legal Pages -->
+  <url>
+    <loc>https://laserhairremovalwinnipeg.ca/privacy</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://laserhairremovalwinnipeg.ca/terms</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+</urlset>

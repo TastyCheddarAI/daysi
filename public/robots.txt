@@ -1,0 +1,99 @@
+# ============================================
+# Laser Hair Removal Winnipeg - robots.txt
+# https://laserhairremovalwinnipeg.ca
+# ============================================
+
+# Sitemap Location
+Sitemap: https://laserhairremovalwinnipeg.ca/sitemap.xml
+
+# ============================================
+# SEARCH ENGINE CRAWLERS
+# ============================================
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Yandex
+Allow: /
+
+# ============================================
+# AI & LLM CRAWLERS - Explicitly Allowed
+# ============================================
+# Perplexity AI
+User-agent: PerplexityBot
+Allow: /
+
+# OpenAI / ChatGPT
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+# Anthropic / Claude
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+# Google AI (Gemini, Bard)
+User-agent: Google-Extended
+Allow: /
+
+# Cohere AI
+User-agent: cohere-ai
+Allow: /
+
+# Meta AI
+User-agent: FacebookBot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+# Common Crawl (used by many AI training datasets)
+User-agent: CCBot
+Allow: /
+
+# ============================================
+# SOCIAL MEDIA PREVIEW BOTS
+# ============================================
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: Pinterest
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+# ============================================
+# DEFAULT - Allow All
+# ============================================
+User-agent: *
+Allow: /
+
+# ============================================
+# PROTECTED PATHS - Admin & Auth
+# ============================================
+Disallow: /admin/
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /checkout
+Disallow: /checkout/cart
+Disallow: /order-confirmation
