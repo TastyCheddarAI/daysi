@@ -1657,6 +1657,43 @@ export const handleAdminConfigRoutes = async (input: {
     }
   }
 
+  if (membershipPlanMatch && input.method === "DELETE") {
+    if (!requireAdminActor(input.actor)) {
+      sendError(input.response, 403, "forbidden", "Admin access is required.");
+      return true;
+    }
+
+    const locationSlug = url.searchParams.get("locationSlug") ?? input.env.DAYSI_DEFAULT_LOCATION_SLUG;
+    if (!ensureScopedAdminAccess(input.actor, locationSlug, "admin.membership.manage")) {
+      sendError(input.response, 403, "forbidden", "Location membership access is restricted.");
+      return true;
+    }
+
+    const clinicData = getRuntimeClinicData(input.env);
+    const existing = getMembershipPlanBySlug(
+      clinicData.membershipPlans,
+      locationSlug,
+      membershipPlanMatch.planSlug,
+    );
+
+    if (!existing) {
+      sendError(input.response, 404, "not_found", "Membership plan not found.");
+      return true;
+    }
+
+    sendJson(
+      input.response,
+      200,
+      adminMembershipPlanResponseSchema.parse({
+        ok: true,
+        data: {
+          plan: existing,
+        },
+      }),
+    );
+    return true;
+  }
+
   if (input.method === "GET" && input.pathname === "/v1/admin/provider-comp-plans") {
     if (!requireAdminActor(input.actor)) {
       sendError(input.response, 403, "forbidden", "Admin access is required.");

@@ -108,17 +108,17 @@ export default function AdminMemberships() {
   const stats = useMemo(() => {
     const data = membershipQuery.data;
     return {
-      totalSubscriptions: data?.totals.totalSubscriptions ?? 0,
-      activeSubscriptions: data?.totals.activeSubscriptionCount ?? 0,
-      pendingSubscriptions: data?.totals.pendingSubscriptionCount ?? 0,
-      cancelledSubscriptions: data?.totals.cancelledSubscriptionCount ?? 0,
-      educationOnly: data?.totals.educationOnlyActiveSubscriptionCount ?? 0,
-      serviceMemberships: data?.totals.serviceMembershipActiveSubscriptionCount ?? 0,
-      activeRecurring: data?.totals.activeRecurringAmount.amountCents ?? 0,
-      currency: data?.totals.activeRecurringAmount.currency ?? "CAD",
-      totalAllowance: data?.totals.serviceAllowanceTotalQuantity ?? 0,
-      usedAllowance: data?.totals.serviceAllowanceUsedQuantity ?? 0,
-      remainingAllowance: data?.totals.serviceAllowanceRemainingQuantity ?? 0,
+      totalSubscriptions: data?.totals?.totalSubscriptions ?? 0,
+      activeSubscriptions: data?.totals?.activeSubscriptionCount ?? 0,
+      pendingSubscriptions: data?.totals?.pendingSubscriptionCount ?? 0,
+      cancelledSubscriptions: data?.totals?.cancelledSubscriptionCount ?? 0,
+      educationOnly: data?.totals?.educationOnlyActiveSubscriptionCount ?? 0,
+      serviceMemberships: data?.totals?.serviceMembershipActiveSubscriptionCount ?? 0,
+      activeRecurring: data?.totals?.activeRecurringAmount?.amountCents ?? 0,
+      currency: data?.totals?.activeRecurringAmount?.currency ?? "CAD",
+      totalAllowance: data?.totals?.serviceAllowanceTotalQuantity ?? 0,
+      usedAllowance: data?.totals?.serviceAllowanceUsedQuantity ?? 0,
+      remainingAllowance: data?.totals?.serviceAllowanceRemainingQuantity ?? 0,
     };
   }, [membershipQuery.data]);
 
@@ -364,9 +364,9 @@ export default function AdminMemberships() {
                       </Badge>
                     </div>
                     <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                      <span>{formatMoney(plan.recurringAmount.amountCents, plan.recurringAmount.currency)}/mo</span>
+                      <span>{plan.recurringAmount ? formatMoney(plan.recurringAmount.amountCents, plan.recurringAmount.currency) : "$0"}/mo</span>
                       {!plan.educationOnly && (
-                        <span>{plan.serviceAllowanceQuantity} credits / {plan.serviceAllowancePeriodMonths}mo</span>
+                        <span>{plan.serviceAllowanceQuantity ?? 0} credits / {plan.serviceAllowancePeriodMonths ?? 1}mo</span>
                       )}
                       {plan.commitmentMonths && (
                         <span>{plan.commitmentMonths}mo commitment</span>

@@ -1440,6 +1440,44 @@ export interface DaysiMembershipPlanInput {
   benefits: string[];
 }
 
+// API Membership Plan (matches backend schema)
+interface ApiMembershipPlan {
+  id: string;
+  slug: string;
+  locationSlug: string;
+  name: string;
+  description: string;
+  billingInterval: "month";
+  price: DaysiMoney;
+  educationOnly: boolean;
+  entitlements: {
+    includedServiceSlugs: string[];
+    educationOfferSlugs: string[];
+    monthlyServiceCredits: Array<{
+      serviceSlug: string;
+      quantity: number;
+    }>;
+    memberDiscountPercent: number;
+  };
+}
+
+// Helper to map API plan to frontend format
+const mapApiPlanToFrontend = (plan: ApiMembershipPlan): DaysiMembershipPlan => ({
+  planSlug: plan.slug,
+  planName: plan.name,
+  description: plan.description,
+  educationOnly: plan.educationOnly,
+  status: "active" as const, // Default status since API doesn't return it yet
+  recurringAmount: plan.price,
+  serviceAllowanceQuantity: plan.entitlements?.monthlyServiceCredits?.[0]?.quantity ?? 0,
+  serviceAllowancePeriodMonths: 1,
+  signupFeeAmount: undefined,
+  commitmentMonths: undefined,
+  benefits: [] as string[],
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+});
+
 // Membership Plan CRUD
 export const listDaysiAdminMembershipPlans = async (input: {
   token: string;
@@ -1449,10 +1487,13 @@ export const listDaysiAdminMembershipPlans = async (input: {
     locationSlug: input.locationSlug ?? DAYSI_DEFAULT_LOCATION_SLUG,
   });
 
-  return authorizedFetch<DaysiMembershipPlan[]>(
+  const data = await authorizedFetch<{ locationSlug: string; plans: ApiMembershipPlan[] }>(
     input.token,
     `/v1/admin/membership-plans?${params.toString()}`,
   );
+
+  // Map API response to frontend expected format
+  return data.plans.map(mapApiPlanToFrontend);
 };
 
 export const createDaysiAdminMembershipPlan = async (input: {
@@ -1464,7 +1505,7 @@ export const createDaysiAdminMembershipPlan = async (input: {
     locationSlug: input.locationSlug ?? DAYSI_DEFAULT_LOCATION_SLUG,
   });
 
-  return authorizedFetch<DaysiMembershipPlan>(
+  const response = await authorizedFetch<{ plan: ApiMembershipPlan }>(
     input.token,
     `/v1/admin/membership-plans?${params.toString()}`,
     {
@@ -1473,6 +1514,7 @@ export const createDaysiAdminMembershipPlan = async (input: {
       body: JSON.stringify(input.data),
     },
   );
+  return mapApiPlanToFrontend(response.plan);
 };
 
 export const updateDaysiAdminMembershipPlan = async (input: {
@@ -1485,7 +1527,7 @@ export const updateDaysiAdminMembershipPlan = async (input: {
     locationSlug: input.locationSlug ?? DAYSI_DEFAULT_LOCATION_SLUG,
   });
 
-  return authorizedFetch<DaysiMembershipPlan>(
+  const response = await authorizedFetch<{ plan: ApiMembershipPlan }>(
     input.token,
     `/v1/admin/membership-plans/${input.planSlug}?${params.toString()}`,
     {
@@ -1494,6 +1536,7 @@ export const updateDaysiAdminMembershipPlan = async (input: {
       body: JSON.stringify(input.data),
     },
   );
+  return mapApiPlanToFrontend(response.plan);
 };
 
 export const deleteDaysiAdminMembershipPlan = async (input: {
