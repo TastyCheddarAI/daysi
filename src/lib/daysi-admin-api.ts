@@ -813,6 +813,45 @@ export const getDaysiBookingRebookingOptions = async (input: {
   return data.slots;
 };
 
+export interface DaysiAdminBookingInput {
+  customerId: string;
+  serviceSlug: string;
+  providerSlug: string;
+  startTime: string;
+  durationMinutes?: number;
+  roomSlug?: string;
+  machineSlug?: string;
+  amountCents?: number;
+  isMemberPrice?: boolean;
+  status?: "confirmed" | "pending";
+  paymentStatus?: "pending" | "paid" | "deposit";
+  notes?: string;
+}
+
+export const createDaysiAdminBooking = async (input: {
+  token: string;
+  locationSlug?: string;
+  booking: DaysiAdminBookingInput;
+}): Promise<DaysiAdminBookingRecord> => {
+  const data = await authorizedFetch<{ booking: DaysiAdminBookingRecord }>(
+    input.token,
+    `/v1/admin/bookings`,
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "idempotency-key": crypto.randomUUID(),
+      },
+      body: JSON.stringify({
+        locationSlug: input.locationSlug ?? DAYSI_DEFAULT_LOCATION_SLUG,
+        ...input.booking,
+      }),
+    },
+  );
+
+  return data.booking;
+};
+
 export const listDaysiAdminProviders = async (
   token: string,
   locationSlug: string = DAYSI_DEFAULT_LOCATION_SLUG,
@@ -822,6 +861,31 @@ export const listDaysiAdminProviders = async (
     `/v1/admin/providers?locationSlug=${encodeURIComponent(locationSlug)}`,
   );
   return data.providers;
+};
+
+export const updateDaysiAdminProvider = async (input: {
+  token: string;
+  providerSlug: string;
+  locationSlug?: string;
+  commissionPercent?: number;
+  serviceSlugs?: string[];
+}): Promise<DaysiAdminProviderSummary> => {
+  const data = await authorizedFetch<{ provider: DaysiAdminProviderSummary }>(
+    input.token,
+    `/v1/admin/providers/${encodeURIComponent(input.providerSlug)}`,
+    {
+      method: "PATCH",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        locationSlug: input.locationSlug ?? DAYSI_DEFAULT_LOCATION_SLUG,
+        commissionPercent: input.commissionPercent,
+        serviceSlugs: input.serviceSlugs,
+      }),
+    },
+  );
+  return data.provider;
 };
 
 export const fetchDaysiCustomerContext = async (input: {
@@ -874,6 +938,48 @@ export const listDaysiAdminCustomers = async (input: {
     stats: DaysiCustomerDirectoryStats;
     customers: DaysiCustomerDirectoryEntry[];
   }>(input.token, `/v1/admin/customers?${params.toString()}`);
+};
+
+export interface DaysiAdminCustomerInput {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+  birthDate?: string;
+  gender?: string;
+  notes?: string;
+  tags?: string[];
+  isVip?: boolean;
+  emailConsent?: boolean;
+  smsConsent?: boolean;
+  marketingConsent?: boolean;
+  addresses?: Array<{
+    label: string;
+    street: string;
+    city: string;
+    province: string;
+    postalCode: string;
+    country: string;
+  }>;
+}
+
+export const createDaysiAdminCustomer = async (input: {
+  token: string;
+  locationSlug?: string;
+  customer: DaysiAdminCustomerInput;
+}): Promise<DaysiCustomerDirectoryEntry> => {
+  const response = await authorizedFetch<{ customer: DaysiCustomerDirectoryEntry }>(
+    input.token,
+    `/v1/admin/customers`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        locationSlug: input.locationSlug ?? DAYSI_DEFAULT_LOCATION_SLUG,
+        ...input.customer,
+      }),
+    },
+  );
+  return response.customer;
 };
 
 export const createDaysiAdminCustomerNote = async (input: {
@@ -1390,15 +1496,117 @@ export const deleteDaysiAdminServicePackage = async (input: {
   );
 };
 
-export const listDaysiAdminProducts = async (
-  locationSlug: string = DAYSI_DEFAULT_LOCATION_SLUG,
-): Promise<DaysiPublicProduct[]> => {
-  const response = await fetch(
-    buildUrl(`/v1/public/locations/${encodeURIComponent(locationSlug)}/catalog/products`),
-  );
+export interface DaysiAdminProduct {
+  slug: string;
+  name: string;
+  description?: string;
+  categorySlug: string;
+  locationSlug: string;
+  msrpCents: number;
+  retailAmountCents: number;
+  memberAmountCents: number;
+  currency: string;
+  durationMinutes?: number;
+  taxCode?: string;
+  sku?: string;
+  barcode?: string;
+  stockQuantity?: number;
+  lowStockThreshold?: number;
+  isActive: boolean;
+  imageUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
-  const data = await parseResponse<{ products: DaysiPublicProduct[] }>(response);
-  return data.products;
+export interface DaysiAdminProductInput {
+  slug?: string;
+  name: string;
+  description?: string;
+  categorySlug?: string;
+  locationSlug?: string;
+  msrpCents?: number;
+  retailAmountCents: number;
+  memberAmountCents?: number;
+  currency?: string;
+  durationMinutes?: number;
+  taxCode?: string;
+  sku?: string;
+  barcode?: string;
+  stockQuantity?: number;
+  lowStockThreshold?: number;
+  isActive?: boolean;
+  imageUrl?: string;
+}
+
+export const listDaysiAdminProducts = async (input: {
+  token: string;
+  locationSlug?: string;
+}): Promise<DaysiAdminProduct[]> => {
+  const params = new URLSearchParams({
+    locationSlug: input.locationSlug ?? DAYSI_DEFAULT_LOCATION_SLUG,
+  });
+
+  return authorizedFetch<{ products: DaysiAdminProduct[] }>(
+    input.token,
+    `/v1/admin/products?${params.toString()}`,
+  ).then(data => data.products);
+};
+
+export const createDaysiAdminProduct = async (input: {
+  token: string;
+  locationSlug?: string;
+  product: DaysiAdminProductInput;
+}): Promise<DaysiAdminProduct> => {
+  const response = await authorizedFetch<{ product: DaysiAdminProduct }>(
+    input.token,
+    `/v1/admin/products`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        locationSlug: input.locationSlug ?? DAYSI_DEFAULT_LOCATION_SLUG,
+        ...input.product,
+      }),
+    },
+  );
+  return response.product;
+};
+
+export const updateDaysiAdminProduct = async (input: {
+  token: string;
+  locationSlug?: string;
+  slug: string;
+  product: Partial<DaysiAdminProductInput>;
+}): Promise<DaysiAdminProduct> => {
+  const response = await authorizedFetch<{ product: DaysiAdminProduct }>(
+    input.token,
+    `/v1/admin/products/${encodeURIComponent(input.slug)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        locationSlug: input.locationSlug ?? DAYSI_DEFAULT_LOCATION_SLUG,
+        ...input.product,
+      }),
+    },
+  );
+  return response.product;
+};
+
+export const deleteDaysiAdminProduct = async (input: {
+  token: string;
+  locationSlug?: string;
+  slug: string;
+}): Promise<void> => {
+  const params = new URLSearchParams({
+    locationSlug: input.locationSlug ?? DAYSI_DEFAULT_LOCATION_SLUG,
+  });
+
+  await authorizedFetch<Record<string, never>>(
+    input.token,
+    `/v1/admin/products/${encodeURIComponent(input.slug)}?${params.toString()}`,
+    {
+      method: "DELETE",
+    },
+  );
 };
 
 export const fetchDaysiRevenueSummaryReport = async (input: {

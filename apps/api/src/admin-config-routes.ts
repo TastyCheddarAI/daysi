@@ -74,6 +74,7 @@ import {
   upsertTenantLocation,
   upsertTenantOrganization,
 } from "./clinic-runtime";
+import { getRuntimeStateRepository } from "./persistence/runtime-state-repository";
 import type { AppEnv } from "./config";
 import { recordAdminAction } from "./admin-audit";
 import { readJsonBody, sendError, sendJson } from "./http";
@@ -1875,6 +1876,231 @@ export const handleAdminConfigRoutes = async (input: {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Invalid provider comp update request.";
+      sendError(input.response, 400, "validation_error", message);
+      return true;
+    }
+  }
+
+  // PRODUCT CRUD ENDPOINTS
+  if (input.method === "GET" && input.pathname === "/v1/admin/products") {
+    if (!requireAdminActor(input.actor)) {
+      sendError(input.response, 403, "forbidden", "Admin access is required.");
+      return true;
+    }
+
+    const locationSlug = url.searchParams.get("locationSlug") ?? input.env.DAYSI_DEFAULT_LOCATION_SLUG;
+    if (!isOwnerActor(input.actor) && !canManageLocation(input.actor, "admin.service.manage", locationSlug)) {
+      sendError(input.response, 403, "forbidden", "Location catalog access is restricted.");
+      return true;
+    }
+
+    const clinicData = getRuntimeClinicData(input.env);
+    const products = clinicData.catalog.products.filter((p) => p.locationSlug === locationSlug);
+
+    sendJson(input.response, 200, {
+      ok: true,
+      data: { locationSlug, products },
+    });
+    return true;
+  }
+
+  if (input.method === "POST" && input.pathname === "/v1/admin/products") {
+    if (!requireAdminActor(input.actor)) {
+      sendError(input.response, 403, "forbidden", "Admin access is required.");
+      return true;
+    }
+
+    try {
+      const body = await readJsonBody(input.request, (b) => b as Record<string, any>);
+      const locationSlug = body.locationSlug ?? input.env.DAYSI_DEFAULT_LOCATION_SLUG;
+      
+      if (!isOwnerActor(input.actor) && !canManageLocation(input.actor, "admin.service.manage", locationSlug)) {
+        sendError(input.response, 403, "forbidden", "Location catalog management is restricted.");
+        return true;
+      }
+
+      const product = {
+        id: `prod_${randomUUID()}`,
+        slug: normalizeSlug(body.slug || body.name, "Product"),
+        locationSlug,
+        name: body.name,
+        shortDescription: body.shortDescription || "",
+        price: {
+          currency: body.price?.currency || "CAD",
+          amountCents: body.price?.amountCents || 0,
+        },
+      };
+
+      // Store in runtime state
+      const runtimeState = getRuntimeStateRepository();
+      const existingProducts = runtimeState.listProductOverrides?.() || [];
+      runtimeState.saveProductOverride?.(product);
+
+      sendJson(input.response, 201, {
+        ok: true,
+        data: { product },
+      });
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Invalid product request.";
+      sendError(input.response, 400, "validation_error", message);
+      return true;
+    }
+  }
+
+  // UPDATE PRODUCT
+  const productMatch = input.pathname.match(/^\/v1\/admin\/products\/([^\/]+)$/);
+  if (productMatch && input.method === "PATCH") {
+    if (!requireAdminActor(input.actor)) {
+      sendError(input.response, 403, "forbidden", "Admin access is required.");
+      return true;
+    }
+
+    try {
+      const body = await readJsonBody(input.request, (b) => b as Record<string, any>);
+      const locationSlug = body.locationSlug ?? input.env.DAYSI_DEFAULT_LOCATION_SLUG;
+      
+      if (!isOwnerActor(input.actor) && !canManageLocation(input.actor, "admin.service.manage", locationSlug)) {
+        sendError(input.response, 403, "forbidden", "Location management is restricted.");
+        return true;
+      }
+
+      const clinicData = getRuntimeClinicData(input.env);
+      const existing = clinicData.catalog.products.find(
+        (p: any) => p.slug === productMatch[1] && p.locationSlug === locationSlug,
+      );
+
+      if (!existing) {
+        sendError(input.response, 404, "not_found", "Product not found.");
+        return true;
+      }
+
+      const updated = {
+        ...(existing as Record<string, any>),
+        name: body.name ?? (existing as Record<string, any>).name,
+        shortDescription: body.shortDescription ?? body.description ?? (existing as Record<string, any>).shortDescription,
+        price: {
+          currency: body.currency ?? body.price?.currency ?? (existing as Record<string, any>).price?.currency ?? "CAD",
+          amountCents: body.price?.amountCents ?? body.retailAmountCents ?? (existing as Record<string, any>).price?.amountCents ?? 0,
+        },
+        updatedAt: new Date().toISOString(),
+      };
+
+      getRuntimeStateRepository().saveProductOverride(updated as any);
+
+      sendJson(input.response, 200, {
+        ok: true,
+        data: { product: updated },
+      });
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Invalid product update request.";
+      sendError(input.response, 400, "validation_error", message);
+      return true;
+    }
+  }
+
+  // DELETE PRODUCT
+  if (productMatch && input.method === "DELETE") {
+    if (!requireAdminActor(input.actor)) {
+      sendError(input.response, 403, "forbidden", "Admin access is required.");
+      return true;
+    }
+
+    const requestUrl = buildUrl(input.request, input.env);
+    const locationSlug = requestUrl.searchParams.get("locationSlug") ?? input.env.DAYSI_DEFAULT_LOCATION_SLUG;
+    
+    if (!isOwnerActor(input.actor) && !canManageLocation(input.actor, "admin.service.manage", locationSlug)) {
+      sendError(input.response, 403, "forbidden", "Location management is restricted.");
+      return true;
+    }
+
+    getRuntimeStateRepository().deleteProductOverride(locationSlug, productMatch[1]);
+
+    sendJson(input.response, 200, { ok: true });
+    return true;
+  }
+
+  // CUSTOMER CREATE ENDPOINT
+  if (input.method === "POST" && input.pathname === "/v1/admin/customers") {
+    if (!requireAdminActor(input.actor)) {
+      sendError(input.response, 403, "forbidden", "Admin access is required.");
+      return true;
+    }
+
+    try {
+      const body = await readJsonBody(input.request, (b) => b as Record<string, any>);
+      const locationSlug = body.locationSlug ?? input.env.DAYSI_DEFAULT_LOCATION_SLUG;
+      
+      if (!isOwnerActor(input.actor) && !canManageLocation(input.actor, "admin.customer.manage", locationSlug)) {
+        sendError(input.response, 403, "forbidden", "Location customer management is restricted.");
+        return true;
+      }
+
+      const customer = {
+        id: `cust_${randomUUID()}`,
+        email: body.email,
+        firstName: body.firstName || "",
+        lastName: body.lastName || "",
+        phone: body.phone || "",
+        locationSlug,
+        createdAt: new Date().toISOString(),
+      };
+
+      sendJson(input.response, 201, {
+        ok: true,
+        data: { customer },
+      });
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Invalid customer request.";
+      sendError(input.response, 400, "validation_error", message);
+      return true;
+    }
+  }
+
+  // PROVIDER UPDATE ENDPOINT
+  const providerMatch = input.pathname.match(/^\/v1\/admin\/providers\/([^\/]+)$/);
+  if (providerMatch && input.method === "PATCH") {
+    if (!requireAdminActor(input.actor)) {
+      sendError(input.response, 403, "forbidden", "Admin access is required.");
+      return true;
+    }
+
+    try {
+      const body = await readJsonBody(input.request, (b) => b as Record<string, any>);
+      const locationSlug = body.locationSlug ?? input.env.DAYSI_DEFAULT_LOCATION_SLUG;
+      
+      if (!isOwnerActor(input.actor) && !canManageLocation(input.actor, "admin.provider.manage", locationSlug)) {
+        sendError(input.response, 403, "forbidden", "Location provider management is restricted.");
+        return true;
+      }
+
+      const clinicData = getRuntimeClinicData(input.env);
+      const existing = clinicData.providers.find(
+        (p) => p.slug === providerMatch[1] && p.locationSlug === locationSlug,
+      );
+
+      if (!existing) {
+        sendError(input.response, 404, "not_found", "Provider not found.");
+        return true;
+      }
+
+      const updated = {
+        ...existing,
+        commissionPercent: body.commissionPercent ?? (existing as Record<string, any>).commissionPercent,
+        serviceSlugs: body.serviceSlugs ?? (existing as Record<string, any>).serviceSlugs,
+      };
+
+      getRuntimeStateRepository().saveProviderOverride(updated);
+
+      sendJson(input.response, 200, {
+        ok: true,
+        data: { provider: updated },
+      });
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Invalid provider update request.";
       sendError(input.response, 400, "validation_error", message);
       return true;
     }

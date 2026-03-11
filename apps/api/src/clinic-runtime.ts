@@ -1,4 +1,5 @@
 import type {
+  CatalogProduct,
   CatalogService,
   CouponDefinition,
   EducationModule,
@@ -99,6 +100,11 @@ export const getRuntimeClinicData = (env: AppEnv): BootstrapClinicData => {
     runtimeState.listServiceOverrides(),
     (service) => buildScopedKey(service.locationSlug, service.slug),
   );
+  const products = mergeByKey(
+    base.catalog.products,
+    runtimeState.listProductOverrides(),
+    (product) => buildScopedKey(product.locationSlug, product.slug),
+  );
   const educationOffers = mergeByKey(
     base.catalog.educationOffers,
     runtimeState.listEducationOfferOverrides(),
@@ -168,6 +174,7 @@ export const getRuntimeClinicData = (env: AppEnv): BootstrapClinicData => {
     catalog: {
       ...base.catalog,
       services,
+      products,
       educationOffers,
       servicePackages,
     },

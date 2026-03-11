@@ -1,4 +1,5 @@
 import type {
+  CatalogProduct,
   CatalogService,
   CouponDefinition,
   EducationOffer,
@@ -59,6 +60,9 @@ export interface RuntimeStateRepository {
   setRoomScheduleTemplate(roomSlug: string, template: RecurringTimeWindow[]): void;
   listServiceOverrides(): CatalogService[];
   saveServiceOverride(service: CatalogService): CatalogService;
+  listProductOverrides(): CatalogProduct[];
+  saveProductOverride(product: CatalogProduct): CatalogProduct;
+  deleteProductOverride(locationSlug: string, slug: string): void;
   listEducationOfferOverrides(): EducationOffer[];
   saveEducationOfferOverride(offer: EducationOffer): EducationOffer;
   listServicePackageOverrides(): ServicePackageOffer[];
@@ -87,6 +91,7 @@ export const createInMemoryRuntimeStateRepository = (): RuntimeStateRepository =
   const machineTemplateOverrides = new Map<string, RecurringTimeWindow[]>();
   const roomTemplateOverrides = new Map<string, RecurringTimeWindow[]>();
   const serviceOverrides = new Map<string, CatalogService>();
+  const productOverrides = new Map<string, CatalogProduct>();
   const educationOfferOverrides = new Map<string, EducationOffer>();
   const servicePackageOverrides = new Map<string, ServicePackageOffer>();
   const membershipPlanOverrides = new Map<string, MembershipPlan>();
@@ -134,6 +139,14 @@ export const createInMemoryRuntimeStateRepository = (): RuntimeStateRepository =
     saveServiceOverride: (service) => {
       serviceOverrides.set(buildScopedKey(service.locationSlug, service.slug), service);
       return service;
+    },
+    listProductOverrides: () => [...productOverrides.values()],
+    saveProductOverride: (product) => {
+      productOverrides.set(buildScopedKey(product.locationSlug, product.slug), product);
+      return product;
+    },
+    deleteProductOverride: (locationSlug, slug) => {
+      productOverrides.delete(buildScopedKey(locationSlug, slug));
     },
     listEducationOfferOverrides: () => [...educationOfferOverrides.values()],
     saveEducationOfferOverride: (offer) => {
@@ -193,6 +206,7 @@ export const createInMemoryRuntimeStateRepository = (): RuntimeStateRepository =
       machineTemplateOverrides.clear();
       roomTemplateOverrides.clear();
       serviceOverrides.clear();
+      productOverrides.clear();
       educationOfferOverrides.clear();
       servicePackageOverrides.clear();
       membershipPlanOverrides.clear();

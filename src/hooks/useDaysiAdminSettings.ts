@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useDaysiAdminSession } from "@/hooks/useDaysiAdminSession";
 import {
+  createDaysiAdminCustomer,
   createDaysiAdminReferralProgram,
   createDaysiAdminRoleAssignment,
   deleteDaysiAdminRoleAssignment,
@@ -11,6 +12,7 @@ import {
   updateDaysiAdminBusinessProfile,
   updateDaysiAdminReferralProgram,
   updateDaysiAdminRoleAssignment,
+  type DaysiAdminCustomerInput,
   type DaysiAdminRoleAssignment,
 } from "@/lib/daysi-admin-api";
 import { DAYSI_DEFAULT_LOCATION_SLUG, type DaysiBusinessProfile } from "@/lib/daysi-public-api";
@@ -221,6 +223,29 @@ export function useUpdateDaysiAdminReferralProgram() {
       }),
     onSuccess: (program) => {
       invalidateReferralPrograms(queryClient, program.locationSlug);
+    },
+  });
+}
+
+// Customer creation hook
+const adminCustomersKey = (locationSlug: string) => ["daysi-admin-customers", locationSlug] as const;
+
+export function useCreateDaysiAdminCustomer() {
+  const session = useDaysiAdminSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      locationSlug: string;
+      customer: DaysiAdminCustomerInput;
+    }) =>
+      createDaysiAdminCustomer({
+        token: session.token!,
+        locationSlug: input.locationSlug,
+        customer: input.customer,
+      }),
+    onSuccess: (_data, input) => {
+      queryClient.invalidateQueries({ queryKey: adminCustomersKey(input.locationSlug) });
     },
   });
 }

@@ -48,6 +48,7 @@ import {
 } from "@/components/ui/select";
 import {
   useDaysiAdminProviders,
+  useUpdateDaysiAdminProvider,
 } from "@/hooks/useDaysiAdminBookings";
 import {
   useDaysiAdminRoleAssignments,
@@ -84,6 +85,7 @@ export default function AdminStaff() {
   const createAssignment = useCreateDaysiAdminRoleAssignment();
   const updateAssignment = useUpdateDaysiAdminRoleAssignment();
   const deleteAssignment = useDeleteDaysiAdminRoleAssignment();
+  const updateProvider = useUpdateDaysiAdminProvider();
 
   const filteredStaff = useMemo(() => {
     const providers = (providersQuery.data ?? []).map((p): CombinedStaff => ({ ...p, type: "provider" }));
@@ -523,11 +525,28 @@ export default function AdminStaff() {
             <Button variant="outline" onClick={() => setIsProviderEditDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={() => {
-              toast.info("Provider update requires backend API implementation");
-              setIsProviderEditDialogOpen(false);
-            }}>
-              Save Changes
+            <Button 
+              onClick={async () => {
+                if (!selectedProvider) return;
+                try {
+                  await updateProvider.mutateAsync({
+                    providerSlug: selectedProvider.providerSlug,
+                    locationSlug: selectedProvider.locationSlug,
+                    commissionPercent: providerCommission,
+                  });
+                  toast.success(`Updated provider ${selectedProvider.providerName}`);
+                  setIsProviderEditDialogOpen(false);
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : "Failed to update provider");
+                }
+              }}
+              disabled={updateProvider.isPending}
+            >
+              {updateProvider.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                "Save Changes"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

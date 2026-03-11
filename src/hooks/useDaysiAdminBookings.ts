@@ -3,9 +3,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   cancelDaysiAdminBooking,
+  createDaysiAdminBooking,
   createDaysiAdminMembershipPlan,
+  createDaysiAdminProduct,
   createDaysiAdminService,
   deleteDaysiAdminMembershipPlan,
+  deleteDaysiAdminProduct,
   deleteDaysiAdminService,
   fetchDaysiCustomerContext,
   fetchDaysiLocationFinanceDashboard,
@@ -16,11 +19,15 @@ import {
   getDaysiBookingRebookingOptions,
   listDaysiAdminBookings,
   listDaysiAdminMembershipPlans,
+  listDaysiAdminProducts,
   listDaysiAdminProviders,
   listDaysiAdminServices,
   pauseDaysiAdminService,
   rescheduleDaysiAdminBooking,
+  type DaysiAdminBookingInput,
   type DaysiAdminBookingRecord,
+  type DaysiAdminProduct,
+  type DaysiAdminProductInput,
   type DaysiAdminServiceInput,
   type DaysiLocationFinanceDashboard,
   type DaysiAdminProviderSummary,
@@ -29,6 +36,8 @@ import {
   type DaysiMembershipPlan,
   type DaysiMembershipPlanInput,
   updateDaysiAdminMembershipPlan,
+  updateDaysiAdminProduct,
+  updateDaysiAdminProvider,
   updateDaysiAdminService,
 } from "@/lib/daysi-admin-api";
 import {
@@ -100,6 +109,31 @@ export function useDaysiAdminProviders(locationSlug: string = DAYSI_DEFAULT_LOCA
     queryFn: async () => listDaysiAdminProviders(session.token!, locationSlug),
     enabled: session.ready,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useUpdateDaysiAdminProvider() {
+  const session = useDaysiAdminSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      providerSlug: string;
+      locationSlug?: string;
+      commissionPercent?: number;
+      serviceSlugs?: string[];
+    }) => {
+      if (!session.token) throw new Error("Not authenticated");
+      return updateDaysiAdminProvider({
+        token: session.token,
+        ...input,
+      });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["daysi-admin-providers", variables.locationSlug ?? DAYSI_DEFAULT_LOCATION_SLUG],
+      });
+    },
   });
 }
 
@@ -629,6 +663,76 @@ export function useDeleteDaysiAdminMembershipPlan() {
     onSuccess: (_data, input) => {
       queryClient.invalidateQueries({ queryKey: adminMembershipPlansKey(input.locationSlug) });
       queryClient.invalidateQueries({ queryKey: ["daysi-membership-performance-report", input.locationSlug] });
+    },
+  });
+}
+
+// Product hooks
+const adminProductsKey = (locationSlug: string) => ["daysi-admin-products", locationSlug] as const;
+
+export function useDaysiAdminProducts(locationSlug: string = DAYSI_DEFAULT_LOCATION_SLUG) {
+  const session = useDaysiAdminSession();
+
+  return useQuery({
+    queryKey: adminProductsKey(locationSlug),
+    queryFn: async () => listDaysiAdminProducts({ token: session.token!, locationSlug }),
+    enabled: session.ready,
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateDaysiAdminProduct() {
+  const session = useDaysiAdminSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { locationSlug: string; product: DaysiAdminProductInput }) =>
+      createDaysiAdminProduct({
+        token: session.token!,
+        locationSlug: input.locationSlug,
+        product: input.product,
+      }),
+    onSuccess: (_data, input) => {
+      queryClient.invalidateQueries({ queryKey: adminProductsKey(input.locationSlug) });
+    },
+  });
+}
+
+export function useUpdateDaysiAdminProduct() {
+  const session = useDaysiAdminSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      locationSlug: string;
+      slug: string;
+      product: Partial<DaysiAdminProductInput>;
+    }) =>
+      updateDaysiAdminProduct({
+        token: session.token!,
+        locationSlug: input.locationSlug,
+        slug: input.slug,
+        product: input.product,
+      }),
+    onSuccess: (_data, input) => {
+      queryClient.invalidateQueries({ queryKey: adminProductsKey(input.locationSlug) });
+    },
+  });
+}
+
+export function useDeleteDaysiAdminProduct() {
+  const session = useDaysiAdminSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { locationSlug: string; slug: string }) =>
+      deleteDaysiAdminProduct({
+        token: session.token!,
+        locationSlug: input.locationSlug,
+        slug: input.slug,
+      }),
+    onSuccess: (_data, input) => {
+      queryClient.invalidateQueries({ queryKey: adminProductsKey(input.locationSlug) });
     },
   });
 }
