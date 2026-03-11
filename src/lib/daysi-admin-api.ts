@@ -994,6 +994,16 @@ export const createDaysiAdminService = async (input: {
   locationSlug: string;
   service: DaysiAdminServiceInput;
 }): Promise<DaysiPublicService> => {
+  // Transform flat price fields to nested price object
+  const servicePayload = {
+    ...input.service,
+    price: {
+      currency: "CAD",
+      retailAmountCents: input.service.retailAmountCents,
+      memberAmountCents: input.service.memberAmountCents,
+      membershipRequired: input.service.membershipRequired,
+    },
+  };
   const data = await authorizedFetch<{ service: DaysiPublicService }>(
     input.token,
     "/v1/admin/services",
@@ -1004,7 +1014,7 @@ export const createDaysiAdminService = async (input: {
       },
       body: JSON.stringify({
         locationSlug: input.locationSlug,
-        service: input.service,
+        service: servicePayload,
       }),
     },
   );
@@ -1017,6 +1027,20 @@ export const updateDaysiAdminService = async (input: {
   serviceSlug: string;
   service: Partial<DaysiAdminServiceInput>;
 }): Promise<DaysiPublicService> => {
+  // Transform flat price fields to nested price object if price-related fields are present
+  const servicePayload: Record<string, unknown> = { ...input.service };
+  if (input.service.retailAmountCents !== undefined || input.service.memberAmountCents !== undefined || input.service.membershipRequired !== undefined) {
+    servicePayload.price = {
+      currency: "CAD",
+      retailAmountCents: input.service.retailAmountCents ?? 0,
+      memberAmountCents: input.service.memberAmountCents,
+      membershipRequired: input.service.membershipRequired ?? false,
+    };
+    delete servicePayload.retailAmountCents;
+    delete servicePayload.memberAmountCents;
+    delete servicePayload.membershipRequired;
+  }
+  
   const data = await authorizedFetch<{ service: DaysiPublicService }>(
     input.token,
     `/v1/admin/services/${encodeURIComponent(input.serviceSlug)}`,
@@ -1027,7 +1051,7 @@ export const updateDaysiAdminService = async (input: {
       },
       body: JSON.stringify({
         locationSlug: input.locationSlug,
-        service: input.service,
+        service: servicePayload,
       }),
     },
   );

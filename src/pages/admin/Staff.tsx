@@ -70,6 +70,11 @@ export default function AdminStaff() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<DaysiAdminRoleAssignment | null>(null);
   
+  // Provider edit state
+  const [isProviderEditDialogOpen, setIsProviderEditDialogOpen] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<DaysiAdminProviderSummary | null>(null);
+  const [providerCommission, setProviderCommission] = useState(30);
+  
   // Form state
   const [newStaffEmail, setNewStaffEmail] = useState("");
   const [newStaffRole, setNewStaffRole] = useState<DaysiAdminRoleAssignment["role"]>("staff");
@@ -240,7 +245,11 @@ export default function AdminStaff() {
                           </p>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => toast.info("Provider editing coming soon")}>
+                      <Button variant="ghost" size="icon" onClick={() => {
+                        setSelectedProvider(staff);
+                        setProviderCommission(staff.commissionPercent);
+                        setIsProviderEditDialogOpen(true);
+                      }}>
                         <Edit className="w-4 h-4" />
                       </Button>
                     </div>
@@ -480,6 +489,45 @@ export default function AdminStaff() {
               ) : (
                 "Remove Access"
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Provider Edit Dialog */}
+      <Dialog open={isProviderEditDialogOpen} onOpenChange={setIsProviderEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Provider</DialogTitle>
+            <DialogDescription>
+              Update provider settings for {selectedProvider?.providerName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="commission">Commission Percentage</Label>
+              <Input
+                id="commission"
+                type="number"
+                min={0}
+                max={100}
+                value={providerCommission}
+                onChange={(e) => setProviderCommission(parseInt(e.target.value) || 0)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Percentage of service revenue paid to provider
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsProviderEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => {
+              toast.info("Provider update requires backend API implementation");
+              setIsProviderEditDialogOpen(false);
+            }}>
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
