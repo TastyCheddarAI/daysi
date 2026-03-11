@@ -160,3 +160,22 @@ export const adminCustomerTagResponseSchema = successEnvelope(
     tag: customerTagSchema,
   }),
 );
+
+export const adminCustomerUpdateRequestSchema = z.object({
+  firstName: z.string().trim().min(1).optional(),
+  lastName: z.string().trim().min(1).optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+});
+
+export const adminCustomerResponseSchema = successEnvelope(
+  z.object({
+    customer: z.object({
+      firstName: z.string(),
+      lastName: z.string(),
+      email: z.string(),
+      phone: z.string().optional(),
+      updatedAt: z.string(),
+    }),
+  }),
+);

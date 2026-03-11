@@ -982,6 +982,27 @@ export const createDaysiAdminCustomer = async (input: {
   return response.customer;
 };
 
+export const updateDaysiAdminCustomer = async (input: {
+  token: string;
+  locationSlug?: string;
+  customerEmail: string;
+  customer: Partial<DaysiAdminCustomerInput>;
+}): Promise<DaysiCustomerDirectoryEntry> => {
+  const params = new URLSearchParams({
+    locationSlug: input.locationSlug ?? DAYSI_DEFAULT_LOCATION_SLUG,
+  });
+
+  const response = await authorizedFetch<{ customer: DaysiCustomerDirectoryEntry }>(
+    input.token,
+    `/v1/admin/customers/${encodeURIComponent(input.customerEmail)}?${params.toString()}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(input.customer),
+    },
+  );
+  return response.customer;
+};
+
 export const createDaysiAdminCustomerNote = async (input: {
   token: string;
   locationSlug: string;
@@ -2113,4 +2134,41 @@ export const listDaysiAdminAuditLogs = async (input: {
     input.token,
     `/v1/admin/audit-logs?${params.toString()}`,
   );
+};
+
+export const exportDaysiAdminAuditLogs = async (input: {
+  token: string;
+  locationSlug?: string;
+  entityType?: string;
+  actorType?: AuditActorType;
+  fromDate?: string;
+  toDate?: string;
+  format?: "json" | "csv";
+}): Promise<Blob> => {
+  const params = new URLSearchParams();
+  if (input.locationSlug) params.set("locationSlug", input.locationSlug);
+  if (input.entityType) params.set("entityType", input.entityType);
+  if (input.actorType) params.set("actorType", input.actorType);
+  if (input.fromDate) params.set("fromDate", input.fromDate);
+  if (input.toDate) params.set("toDate", input.toDate);
+  params.set("format", input.format ?? "json");
+
+  const response = await fetch(
+    `${DAYSI_API_BASE_URL}/v1/admin/audit-logs/export?${params.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${input.token}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    throw new DaysiAdminApiError(
+      payload?.error?.message ?? payload?.message ?? "Failed to export audit logs.",
+      response.status,
+    );
+  }
+
+  return response.blob();
 };

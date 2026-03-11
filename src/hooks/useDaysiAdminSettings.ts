@@ -10,6 +10,7 @@ import {
   listDaysiAdminReferralPrograms,
   listDaysiAdminRoleAssignments,
   updateDaysiAdminBusinessProfile,
+  updateDaysiAdminCustomer,
   updateDaysiAdminReferralProgram,
   updateDaysiAdminRoleAssignment,
   type DaysiAdminCustomerInput,
@@ -242,6 +243,28 @@ export function useCreateDaysiAdminCustomer() {
       createDaysiAdminCustomer({
         token: session.token!,
         locationSlug: input.locationSlug,
+        customer: input.customer,
+      }),
+    onSuccess: (_data, input) => {
+      queryClient.invalidateQueries({ queryKey: adminCustomersKey(input.locationSlug) });
+    },
+  });
+}
+
+export function useUpdateDaysiAdminCustomer() {
+  const session = useDaysiAdminSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      locationSlug: string;
+      customerEmail: string;
+      customer: Partial<DaysiAdminCustomerInput>;
+    }) =>
+      updateDaysiAdminCustomer({
+        token: session.token!,
+        locationSlug: input.locationSlug,
+        customerEmail: input.customerEmail,
         customer: input.customer,
       }),
     onSuccess: (_data, input) => {

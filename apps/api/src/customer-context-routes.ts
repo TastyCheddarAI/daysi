@@ -8,6 +8,8 @@ import {
   adminCustomerTagCreateRequestSchema,
   adminCustomerTagResponseSchema,
   customerContextResponseSchema,
+  adminCustomerUpdateRequestSchema,
+  adminCustomerResponseSchema,
 } from "../../../packages/contracts/src";
 import {
   buildCustomerDirectoryView,
@@ -476,6 +478,134 @@ export const handleCustomerContextRoutes = async (input: {
     input.response.writeHead(204);
     input.response.end();
     return true;
+  }
+
+  // UPDATE CUSTOMER
+  const customerMatch = input.pathname.match(/^\/v1\/admin\/customers\/([^\/]+)$/);
+  if (customerMatch && input.method === "PATCH") {
+    if (!requireAdminActor(input.actor)) {
+      sendError(input.response, 403, "forbidden", "Admin access is required.");
+      return true;
+    }
+
+    try {
+      const customerEmail = decodeURIComponent(customerMatch[1]);
+      const locationSlug = url.searchParams.get("locationSlug") ?? input.env.DAYSI_DEFAULT_LOCATION_SLUG;
+
+      if (!tenant.locations.some((location) => location.slug === locationSlug)) {
+        sendError(input.response, 404, "not_found", "Location not found.");
+        return true;
+      }
+      if (!ensureScopedAdminAccess(input.actor, locationSlug)) {
+        sendError(input.response, 403, "forbidden", "Customer update access is restricted.");
+        return true;
+      }
+
+      const body = await readJsonBody(input.request, (b) => adminCustomerUpdateRequestSchema.parse(b));
+
+      // Get existing customer context to verify they exist
+      const context = buildCustomerContextView({
+        locationSlug,
+        customerEmail,
+        notes: filterCustomerNotes({
+          notes: await input.repositories.engagement.customerNotes.listAll(),
+          locationSlug,
+          customerEmail,
+        }),
+        tags: filterCustomerTags({
+          tags: await input.repositories.engagement.customerTags.listAll(),
+          locationSlug,
+          customerEmail,
+        }),
+        events: filterCustomerEvents({
+          events: await input.repositories.engagement.customerEvents.listAll(),
+          locationSlug,
+          customerEmail,
+        }),
+        bookings: filterCustomerBookings({
+          bookings: await input.repositories.commerce.bookings.listAll(),
+          locationSlug,
+          customerEmail,
+        }),
+        orders: filterCustomerOrders({
+          orders: await input.repositories.commerce.orders.listAll(),
+          locationSlug,
+          customerEmail,
+        }),
+        subscriptions: filterCustomerSubscriptions({
+          subscriptions: await input.repositories.commerce.memberships.listAllSubscriptions(),
+          locationSlug,
+          customerEmail,
+        }),
+        entitlements: [],
+        creditEntries: filterCustomerCreditEntries({
+          creditEntries: await input.repositories.commerce.credits.listAll(),
+          locationSlug,
+          customerEmail,
+        }),
+        skinAssessments: filterCustomerSkinAssessments({
+          skinAssessments: await input.repositories.clinicalIntelligence.skinAssessments.list(locationSlug),
+          locationSlug,
+          customerEmail,
+        }),
+      });
+
+      if (!context) {
+        sendError(input.response, 404, "not_found", "Customer not found.");
+        return true;
+      }
+
+      // Update customer info via event
+      const updatedCustomer = {
+        ...context.profile,
+        firstName: body.firstName ?? context.profile.firstName,
+        lastName: body.lastName ?? context.profile.lastName,
+        email: body.email ?? context.profile.email,
+        phone: body.phone ?? context.profile.phone,
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Record update as an event for audit trail
+      await input.repositories.engagement.customerEvents.save({
+        id: `evt_${Date.now()}`,
+        type: "customer.updated",
+        customerEmail,
+        locationSlug,
+        metadata: {
+          updatedBy: input.actor.userId,
+          updatedByEmail: input.actor.email,
+          changes: Object.keys(body),
+        },
+        createdAt: new Date().toISOString(),
+      });
+
+      // Record admin action
+      recordAdminAction({
+        actor: input.actor,
+        action: "customer.updated",
+        resourceType: "customer",
+        resourceId: customerEmail,
+        locationSlug,
+        summary: `Updated customer ${customerEmail}`,
+        repositories: input.repositories,
+      });
+
+      sendJson(
+        input.response,
+        200,
+        adminCustomerResponseSchema.parse({
+          ok: true,
+          data: {
+            customer: updatedCustomer,
+          },
+        }),
+      );
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Invalid customer update request.";
+      sendError(input.response, 400, "validation_error", message);
+      return true;
+    }
   }
 
   return false;

@@ -30,8 +30,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DAYSI_DEFAULT_LOCATION_SLUG } from "@/lib/daysi-public-api";
-import { useDaysiAdminAuditLogs } from "@/hooks/useDaysiAdminAudit";
+import { useDaysiAdminAuditLogs, useExportDaysiAdminAuditLogs } from "@/hooks/useDaysiAdminAudit";
 import type { AuditActorType, DaysiAdminAuditLogEntry } from "@/lib/daysi-admin-api";
+import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const actionIcons: Record<string, React.ElementType> = {
   "booking.created": Calendar,
@@ -135,10 +142,7 @@ export default function AdminAudit() {
           <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
             {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh"}
           </Button>
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
+          <ExportButton locationSlug={locationSlug} filterType={filterType} filterActor={filterActor} />
         </div>
       </div>
 
@@ -291,5 +295,61 @@ export default function AdminAudit() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function ExportButton({ 
+  locationSlug, 
+  filterType, 
+  filterActor 
+}: { 
+  locationSlug: string; 
+  filterType: string; 
+  filterActor: AuditActorType | "all";
+}) {
+  const exportLogs = useExportDaysiAdminAuditLogs();
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async (format: "json" | "csv") => {
+    setIsExporting(true);
+    try {
+      const blob = await exportLogs.mutateAsync({
+        locationSlug,
+        entityType: filterType === "all" ? undefined : filterType,
+        actorType: filterActor === "all" ? undefined : filterActor,
+        format,
+      });
+      
+      // Download the file
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `audit-log-${new Date().toISOString().split("T")[0]}.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" disabled={isExporting}>
+          {isExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+          Export
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => handleExport("json")}>
+          Export as JSON
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleExport("csv")}>
+          Export as CSV
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
