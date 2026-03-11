@@ -2059,6 +2059,121 @@ export const handleAdminConfigRoutes = async (input: {
     }
   }
 
+  // BOOKING CREATE ENDPOINT
+  if (input.method === "POST" && input.pathname === "/v1/admin/bookings") {
+    if (!requireAdminActor(input.actor)) {
+      sendError(input.response, 403, "forbidden", "Admin access is required.");
+      return true;
+    }
+    try {
+      const body = await readJsonBody(input.request, (b) => b as Record<string, any>);
+      const locationSlug = body.locationSlug ?? input.env.DAYSI_DEFAULT_LOCATION_SLUG;
+      
+      if (!isOwnerActor(input.actor) && !canManageLocation(input.actor, "booking.manage.location", locationSlug)) {
+        sendError(input.response, 403, "forbidden", "Booking management is restricted.");
+        return true;
+      }
+
+      // Validate required fields
+      if (!body.customerId || !body.serviceSlug || !body.providerSlug || !body.startTime) {
+        sendError(input.response, 400, "validation_error", "Missing required fields: customerId, serviceSlug, providerSlug, startTime");
+        return true;
+      }
+
+      // Get clinic data for validation
+      const clinicData = getRuntimeClinicData(input.env);
+      
+      // Verify service exists
+      const service = clinicData.catalog.services.find(
+        (s: any) => s.slug === body.serviceSlug && s.locationSlug === locationSlug
+      );
+      if (!service) {
+        sendError(input.response, 404, "not_found", "Service not found.");
+        return true;
+      }
+
+      // Verify provider exists
+      const provider = clinicData.providers.find(
+        (p: any) => p.slug === body.providerSlug && p.locationSlug === locationSlug
+      );
+      if (!provider) {
+        sendError(input.response, 404, "not_found", "Provider not found.");
+        return true;
+      }
+
+      // Generate booking ID and reference
+      const bookingId = randomUUID();
+      const bookingRef = `BK${Date.now().toString(36).toUpperCase()}`;
+      const now = new Date().toISOString();
+
+      // Calculate end time based on service duration
+      const startTime = new Date(body.startTime);
+      const durationMinutes = body.durationMinutes || service.durationMinutes || 60;
+      const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
+
+      // Create booking record
+      const booking = {
+        id: bookingId,
+        reference: bookingRef,
+        customerId: body.customerId,
+        locationSlug,
+        serviceSlug: body.serviceSlug,
+        serviceName: service.name,
+        providerSlug: body.providerSlug,
+        providerName: provider.name,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        durationMinutes,
+        status: body.status || "confirmed",
+        notes: body.notes || "",
+        price: {
+          currency: service.price?.currency || "CAD",
+          amountCents: body.amountCents || service.price?.retailAmountCents || 0,
+          isMemberPrice: body.isMemberPrice || false,
+        },
+        roomSlug: body.roomSlug || null,
+        machineSlug: body.machineSlug || null,
+        paymentStatus: body.paymentStatus || "pending",
+        source: "admin",
+        createdBy: input.actor.userId,
+        createdAt: now,
+        updatedAt: now,
+        remindersSent: {
+          confirmation: false,
+          dayBefore: false,
+          hourBefore: false,
+        },
+      };
+
+      // Persist booking
+      await input.repositories.commerce.bookings.save(booking);
+
+      // Record audit
+      recordAdminAction({
+        actor: input.actor,
+        action: "booking.create",
+        resourceType: "booking",
+        resourceId: bookingId,
+        locationSlug,
+        metadata: { 
+          customerId: body.customerId,
+          serviceSlug: body.serviceSlug,
+          startTime: booking.startTime,
+        },
+      });
+
+      sendJson(input.response, 201, {
+        ok: true,
+        data: { booking },
+      });
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Invalid booking request.";
+      sendError(input.response, 400, "validation_error", message);
+      return true;
+    }
+  }
+
   // PROVIDER UPDATE ENDPOINT
   const providerMatch = input.pathname.match(/^\/v1\/admin\/providers\/([^\/]+)$/);
   if (providerMatch && input.method === "PATCH") {
