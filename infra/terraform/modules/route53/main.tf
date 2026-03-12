@@ -19,8 +19,10 @@ resource "aws_route53_zone" "main" {
   )
 }
 
-# ALIAS record for apex domain (daysi.ca)
+# ALIAS record for apex domain — only when manage_apex_records is true
+# (set false when cloudfront module owns the apex/www records)
 resource "aws_route53_record" "apex" {
+  count   = var.manage_apex_records ? 1 : 0
   zone_id = aws_route53_zone.main.zone_id
   name    = var.domain_name
   type    = "A"
@@ -32,8 +34,9 @@ resource "aws_route53_record" "apex" {
   }
 }
 
-# CNAME record for www subdomain
+# CNAME record for www subdomain — only when manage_apex_records is true
 resource "aws_route53_record" "www" {
+  count   = var.manage_apex_records ? 1 : 0
   zone_id = aws_route53_zone.main.zone_id
   name    = "www.${var.domain_name}"
   type    = "CNAME"

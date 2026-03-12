@@ -81,6 +81,9 @@ jobs:
         run: npm ci
 
       - name: Build
+        env:
+          VITE_DAYSI_API_URL: https://daysi.ca
+          VITE_DAYSI_DEFAULT_LOCATION_SLUG: daysi-flagship
         run: npm run build
 
       - name: Upload build artifacts

@@ -25,6 +25,12 @@ variable "alb_zone_id" {
   type        = string
 }
 
+variable "manage_apex_records" {
+  description = "When false, the apex and www A records are NOT created here — another module (e.g. cloudfront) manages them"
+  type        = bool
+  default     = true
+}
+
 variable "create_certificate" {
   description = "Whether to create ACM certificate"
   type        = bool

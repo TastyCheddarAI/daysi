@@ -72,11 +72,27 @@ module "s3" {
 module "route53" {
   source = "../../modules/route53"
 
-  environment      = local.environment
-  project_name     = var.project_name
-  domain_name      = "daysi.ca"
-  alb_dns_name     = module.ecs.alb_dns_name
-  alb_zone_id      = "Z35SXDOTRQ7X7K"  # us-east-1 ALB zone ID
-  create_certificate = true
-  tags             = local.common_tags
+  environment         = local.environment
+  project_name        = var.project_name
+  domain_name         = "daysi.ca"
+  alb_dns_name        = module.ecs.alb_dns_name
+  alb_zone_id         = "Z35SXDOTRQ7X7K" # us-east-1 ALB zone ID
+  manage_apex_records = false              # CloudFront module manages apex/www records
+  create_certificate  = true
+  tags                = local.common_tags
+}
+
+module "cloudfront" {
+  source = "../../modules/cloudfront"
+
+  environment     = local.environment
+  project_name    = var.project_name
+  alb_dns_name    = module.ecs.alb_dns_name
+  alb_zone_id     = "Z35SXDOTRQ7X7K"
+  domain_name     = "daysi.ca"
+  route53_zone_id = module.route53.hosted_zone_id
+  certificate_arn = module.route53.certificate_arn
+  tags            = local.common_tags
+
+  depends_on = [module.route53] # ACM certificate must be validated before CloudFront uses it
 }
