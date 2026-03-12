@@ -1679,8 +1679,7 @@ export const buildSkinAssessmentPerformanceReport = (input: {
     (booking) =>
       booking.locationSlug === input.locationSlug &&
       !!booking.sourceAssessmentId &&
-      relevantAssessmentIds.has(booking.sourceAssessmentId) &&
-      isWithinDateRange(booking.createdAt, input.fromDate, input.toDate),
+      relevantAssessmentIds.has(booking.sourceAssessmentId),
   );
   const attributedBookingIds = new Set(attributedBookings.map((booking) => booking.id));
   const serviceNameBySlug = new Map(
@@ -1706,8 +1705,7 @@ export const buildSkinAssessmentPerformanceReport = (input: {
     .filter(
       (order) =>
         order.locationSlug === input.locationSlug &&
-        order.status === "paid" &&
-        isWithinDateRange(order.paidAt, input.fromDate, input.toDate),
+        order.status === "paid",
     )
     .flatMap((order) =>
       order.lineItems

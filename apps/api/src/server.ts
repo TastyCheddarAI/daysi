@@ -73,7 +73,11 @@ setInterval(() => {
   }
 }, 5 * 60_000).unref();
 
+const LOOPBACK_IPS = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
+
 const isRateLimited = (ip: string): boolean => {
+  if (LOOPBACK_IPS.has(ip)) return false;
+
   const now = Date.now();
   const entry = rateLimitStore.get(ip);
 

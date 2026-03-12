@@ -2208,6 +2208,8 @@ export const handleAdminConfigRoutes = async (input: {
 
       const updated = {
         ...existing,
+        name: body.name ?? existing.name,
+        availability: body.template ? toRecurringWindows(body.template) : existing.availability,
         commissionPercent: body.commissionPercent ?? (existing as Record<string, any>).commissionPercent,
         serviceSlugs: body.serviceSlugs ?? (existing as Record<string, any>).serviceSlugs,
       };
