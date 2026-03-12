@@ -132,6 +132,12 @@ export const handleIntelligenceRoutes = async (input: {
     // Full keyword universe for Winnipeg/MB laser aesthetics market.
     // Callers can override by posting { services: [...], locations: [...] }.
     const services = body.services ?? [
+      // Daysi signature — glass facial is the differentiator; own these terms first
+      "glass facial",
+      "glass skin facial",
+      "glass skin treatment",
+      "glass skin",
+      "korean glass skin",
       // Hair removal
       "laser hair removal",
       "laser hair removal legs",
@@ -229,25 +235,30 @@ export const handleIntelligenceRoutes = async (input: {
 
     const body = await readJsonBody(request, (b) => b as { services?: string[] });
     const services = body.services ?? [
-      // High-volume services to watch on social
+      // Daysi signature — monitor viral glass skin content closely
+      "glass facial",
+      "glass skin",
+      "glass skin treatment",
+      "korean glass skin",
+      "glass glow skin",
+      // Core services
       "laser hair removal",
       "botox",
       "lip filler",
       "lip injections",
       "microneedling",
       "hydrafacial",
-      "skin care",
       "acne scar treatment",
       "skin tightening",
       "chemical peel",
-      "laser skin",
       "med spa",
-      "aesthetic clinic",
-      // Trending formats & topics in the aesthetics space
+      // Trending aesthetic formats
       "glow skin",
-      "glass skin",
       "skin barrier",
+      "skin flooding",
+      "slugging skin care",
       "anti aging skin care",
+      "laser skin care",
     ];
 
     try {

@@ -112,6 +112,18 @@ const INJECTABLE_SERVICES = [
   "anti wrinkle injections",
 ];
 
+// ── Signature treatments (Daysi-owned, first-mover SEO opportunity) ──────────
+// "Glass facial" is Daysi's signature treatment. Near-zero competition in MB.
+// Own these terms before any competitor knows they exist in this market.
+const SIGNATURE_SERVICES = [
+  "glass facial",
+  "glass skin facial",
+  "glass skin treatment",
+  "glass skin",
+  "korean glass skin",
+  "glass glow facial",
+];
+
 // ── Skin treatments (growing category, strong social trends) ─────────────────
 const SKIN_TREATMENT_SERVICES = [
   "microneedling",
@@ -123,6 +135,7 @@ const SKIN_TREATMENT_SERVICES = [
   "skin rejuvenation",
   "laser facial",
   "hydrafacial",
+  "oxygen facial",
 ];
 
 // ── Condition-based (highest buying intent — problem-aware searchers) ─────────
@@ -137,6 +150,8 @@ const CONDITION_SERVICES = [
   "tattoo removal",
   "stretch mark treatment",
   "melasma treatment",
+  "dull skin treatment",
+  "uneven skin tone treatment",
 ];
 
 // ── Business-type (awareness & comparison shoppers) ───────────────────────────
@@ -150,6 +165,7 @@ const BUSINESS_TYPE_SERVICES = [
 ];
 
 const ALL_WINNIPEG_SERVICES = [
+  ...SIGNATURE_SERVICES,       // Glass facial first — these are our differentiator
   ...HAIR_REMOVAL_SERVICES,
   ...INJECTABLE_SERVICES,
   ...SKIN_TREATMENT_SERVICES,
@@ -157,17 +173,23 @@ const ALL_WINNIPEG_SERVICES = [
   ...BUSINESS_TYPE_SERVICES,
 ];
 
-// Steinbach (18k pop, growing fast, nearest major centre to Niverville ~20min away)
-// Lower volume but near-zero competition — easy to rank #1
+// Steinbach: include ALL signature + priority services.
+// "Glass facial Steinbach" = zero competition, massive first-mover advantage.
 const STEINBACH_PRIORITY_SERVICES = [
+  // Signature — own this term in Steinbach before anyone else
+  "glass facial",
+  "glass skin facial",
+  "glass skin treatment",
+  // High-volume services
   "laser hair removal",
   "botox",
   "lip filler",
+  "microneedling",
+  "acne scar treatment",
+  // Business-type
   "med spa",
   "laser clinic",
   "aesthetic clinic",
-  "microneedling",
-  "acne scar treatment",
 ];
 
 const DEFAULT_LOCATIONS = [

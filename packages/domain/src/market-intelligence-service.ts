@@ -491,11 +491,33 @@ const BUSINESS_TYPE_SERVICES = new Set([
   "cosmetic clinic",
 ]);
 
+// Signature / trend-driven treatments — educational + local + aspirational variants
+const SIGNATURE_SERVICES = new Set([
+  "glass facial",
+  "glass skin facial",
+  "glass skin treatment",
+  "glass skin",
+  "korean glass skin",
+  "glass glow facial",
+  "glass glow skin",
+]);
+
 function buildKeywordVariants(service: string, location: string): string[] {
   const city = location.split(",")[0].trim(); // "Winnipeg"
   const variants: string[] = [];
 
-  if (BUSINESS_TYPE_SERVICES.has(service)) {
+  if (SIGNATURE_SERVICES.has(service)) {
+    // Signature treatments: city-local + near me + "what is" educational + before/after
+    // These rank fast because competition is near zero in smaller markets.
+    variants.push(
+      `${service} ${city}`,
+      `${service} near me`,
+      `best ${service} ${city}`,
+      `what is ${service}`,
+      `${service} treatment`,
+      `${service} before and after`,
+    );
+  } else if (BUSINESS_TYPE_SERVICES.has(service)) {
     // Business-type: city-specific + near me + "best"
     variants.push(
       `${service} ${city}`,
