@@ -109,7 +109,7 @@ function ServiceForm({
   };
 
   const removeTag = (tag: string) => {
-    onChange({ ...service, featureTags: service.featureTags.filter((t) => t !== tag) });
+    onChange({ ...service, featureTags: service.featureTags.filter((t: string) => t !== tag) });
   };
 
   return (
@@ -283,7 +283,7 @@ function ServiceForm({
           </Button>
         </div>
         <div className="flex flex-wrap gap-2 pt-2">
-          {service.featureTags.map((tag) => (
+          {service.featureTags.map((tag: string) => (
             <span
               key={tag}
               className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-xs rounded-full"

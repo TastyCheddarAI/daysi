@@ -217,7 +217,7 @@ export default function AdminIntakeForms() {
               title="No forms created"
               description="Create your first intake form to collect patient information"
               action={{ label: "Create Form", onClick: () => setIsCreateOpen(true) }}
-              icon={<FileText className="h-8 w-8" />}
+              icon={FileText}
             />
           ) : (
             <div className="space-y-3">

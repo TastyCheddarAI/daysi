@@ -381,7 +381,7 @@ export default function AdminImports() {
             <EmptyState
               title="No import jobs"
               description="Upload your first CSV file to get started"
-              icon={<FileSpreadsheet className="h-8 w-8" />}
+              icon={FileSpreadsheet}
             />
           ) : (
             <div className="space-y-3">

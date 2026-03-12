@@ -36,15 +36,18 @@ module "aurora" {
 module "ecs" {
   source = "../../modules/ecs"
 
-  environment     = local.environment
-  project_name    = var.project_name
-  vpc_id          = module.vpc.vpc_id
+  environment        = local.environment
+  project_name       = var.project_name
+  vpc_id             = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_ids
   public_subnet_ids  = module.vpc.public_subnet_ids
-  task_cpu        = "256"
-  task_memory     = "512"
-  desired_count   = 1
-  tags            = local.common_tags
+  task_cpu           = "256"
+  task_memory        = "512"
+  desired_count      = 1
+  min_capacity       = 1
+  max_capacity       = 4
+  alarm_email        = var.alarm_email
+  tags               = local.common_tags
 }
 
 module "cognito" {

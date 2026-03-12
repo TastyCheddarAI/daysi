@@ -21,3 +21,9 @@ variable "monthly_budget_amount" {
   type        = number
   default     = 300
 }
+
+variable "alarm_email" {
+  description = "Email address for CloudWatch alarm notifications."
+  type        = string
+  default     = null
+}

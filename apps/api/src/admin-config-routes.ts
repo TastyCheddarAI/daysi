@@ -2114,51 +2114,56 @@ export const handleAdminConfigRoutes = async (input: {
       // Create booking record
       const booking = {
         id: bookingId,
-        reference: bookingRef,
-        customerId: body.customerId,
+        code: bookingRef,
         locationSlug,
         serviceSlug: body.serviceSlug,
+        serviceVariantSlug: body.serviceVariantSlug ?? "",
         serviceName: service.name,
+        customer: {
+          firstName: body.customerFirstName ?? "",
+          lastName: body.customerLastName ?? "",
+          email: body.customerId ?? "",
+          phone: body.customerPhone,
+        },
         providerSlug: body.providerSlug,
         providerName: provider.name,
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
-        durationMinutes,
-        status: body.status || "confirmed",
-        notes: body.notes || "",
-        price: {
+        machineSlug: body.machineSlug ?? "",
+        machineName: body.machineName ?? "",
+        roomSlug: body.roomSlug,
+        roomName: body.roomName,
+        status: (body.status || "confirmed") as "confirmed" | "cancelled",
+        startAt: startTime.toISOString(),
+        endAt: endTime.toISOString(),
+        charge: {
           currency: service.price?.currency || "CAD",
-          amountCents: body.amountCents || service.price?.retailAmountCents || 0,
-          isMemberPrice: body.isMemberPrice || false,
+          retailAmountCents: body.amountCents || service.price?.retailAmountCents || 0,
+          finalAmountCents: body.amountCents || service.price?.retailAmountCents || 0,
+          membershipRequired: false,
+          appliedPricingMode: "retail" as const,
         },
-        roomSlug: body.roomSlug || null,
-        machineSlug: body.machineSlug || null,
-        paymentStatus: body.paymentStatus || "pending",
-        source: "admin",
-        createdBy: input.actor.userId,
+        notes: body.notes,
+        statusHistory: [],
+        actorUserId: input.actor.userId,
         createdAt: now,
         updatedAt: now,
-        remindersSent: {
-          confirmation: false,
-          dayBefore: false,
-          hourBefore: false,
-        },
       };
 
       // Persist booking
-      await input.repositories.commerce.bookings.save(booking);
+      const managementToken = randomUUID();
+      await input.repositories.commerce.bookings.save(booking, managementToken);
 
       // Record audit
       recordAdminAction({
         actor: input.actor,
         action: "booking.create",
-        resourceType: "booking",
-        resourceId: bookingId,
+        entityType: "booking",
+        entityId: bookingId,
         locationSlug,
-        metadata: { 
+        summary: `Created booking ${bookingRef} for ${body.customerId}`,
+        metadata: {
           customerId: body.customerId,
           serviceSlug: body.serviceSlug,
-          startTime: booking.startTime,
+          startAt: booking.startAt,
         },
       });
 

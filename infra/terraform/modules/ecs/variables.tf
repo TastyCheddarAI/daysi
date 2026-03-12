@@ -60,6 +60,24 @@ variable "certificate_arn" {
   default     = null
 }
 
+variable "min_capacity" {
+  description = "Minimum number of ECS tasks for autoscaling"
+  type        = number
+  default     = 1
+}
+
+variable "max_capacity" {
+  description = "Maximum number of ECS tasks for autoscaling"
+  type        = number
+  default     = 4
+}
+
+variable "alarm_email" {
+  description = "Email address to receive CloudWatch alarm notifications (optional)"
+  type        = string
+  default     = null
+}
+
 variable "tags" {
   description = "Common tags for all resources"
   type        = map(string)

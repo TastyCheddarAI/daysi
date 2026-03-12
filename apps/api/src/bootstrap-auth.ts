@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 
 import { hash, compare } from "bcrypt";
 import {
@@ -19,13 +19,58 @@ export const verifyPassword = async (password: string, hash: string): Promise<bo
   return compare(password, hash);
 };
 
-const encodeBootstrapToken = (actor: Actor): string =>
-  Buffer.from(JSON.stringify(actor), "utf8").toString("base64url");
+// ---------------------------------------------------------------------------
+// Token signing
+// Tokens are: base64url(payload) + "." + hex(HMAC-SHA256(secret, base64url(payload)))
+// If no secret is configured the token is unsigned (development only — logged as warning).
+// ---------------------------------------------------------------------------
 
-const decodeBootstrapToken = (token: string): Actor | null => {
+const signPayload = (payload: string, secret: string): string => {
+  return createHmac("sha256", secret).update(payload).digest("hex");
+};
+
+const encodeBootstrapToken = (actor: Actor, secret?: string): string => {
+  const payload = Buffer.from(JSON.stringify(actor), "utf8").toString("base64url");
+  if (!secret) {
+    // Unsigned — only acceptable in development bootstrap mode
+    console.warn(
+      "[auth] DAYSI_SESSION_SECRET is not set. Tokens are unsigned. Set this variable before going to production.",
+    );
+    return payload;
+  }
+  const sig = signPayload(payload, secret);
+  return `${payload}.${sig}`;
+};
+
+const decodeBootstrapToken = (token: string, secret?: string): Actor | null => {
   try {
-    const payload = Buffer.from(token, "base64url").toString("utf8");
-    return actorSchema.parse(JSON.parse(payload));
+    if (secret) {
+      const dotIndex = token.lastIndexOf(".");
+      if (dotIndex === -1) {
+        // Token has no signature — reject when a secret is configured
+        return null;
+      }
+      const payload = token.slice(0, dotIndex);
+      const providedSig = token.slice(dotIndex + 1);
+      const expectedSig = signPayload(payload, secret);
+      // Constant-time comparison to prevent timing attacks
+      const providedBuf = Buffer.from(providedSig, "hex");
+      const expectedBuf = Buffer.from(expectedSig, "hex");
+      if (
+        providedBuf.length !== expectedBuf.length ||
+        !timingSafeEqual(providedBuf, expectedBuf)
+      ) {
+        return null;
+      }
+      const raw = Buffer.from(payload, "base64url").toString("utf8");
+      return actorSchema.parse(JSON.parse(raw));
+    }
+
+    // No secret — accept unsigned tokens (dev mode only)
+    const dotIndex = token.lastIndexOf(".");
+    const payload = dotIndex === -1 ? token : token.slice(0, dotIndex);
+    const raw = Buffer.from(payload, "base64url").toString("utf8");
+    return actorSchema.parse(JSON.parse(raw));
   } catch {
     return null;
   }
@@ -51,6 +96,7 @@ export const createBootstrapSession = async (
   request: SessionExchangeRequest,
   defaultLocationSlug: string,
   accessAssignments: ConfigurationRepository["accessAssignments"],
+  sessionSecret?: string,
 ): Promise<{ sessionToken: string; actor: Actor; sessionMode: "bootstrap" }> => {
   const roles = [request.requestedRole];
   const isPrivilegedRole = ["owner", "admin", "staff"].includes(request.requestedRole);
@@ -125,7 +171,7 @@ export const createBootstrapSession = async (
   };
 
   return {
-    sessionToken: encodeBootstrapToken(actor),
+    sessionToken: encodeBootstrapToken(actor, sessionSecret),
     actor,
     sessionMode: "bootstrap",
   };
@@ -159,6 +205,7 @@ export const validateBootstrapActorAccess = async (
 
 export const getActorFromAuthHeader = (
   authorizationHeader: string | undefined,
+  sessionSecret?: string,
 ): Actor | null => {
   if (!authorizationHeader) {
     return null;
@@ -169,5 +216,5 @@ export const getActorFromAuthHeader = (
     return null;
   }
 
-  return decodeBootstrapToken(token);
+  return decodeBootstrapToken(token, sessionSecret);
 };

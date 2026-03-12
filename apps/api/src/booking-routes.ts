@@ -41,6 +41,10 @@ import { recordOperationalMetricEvent } from "./analytics-support";
 import { getRuntimeClinicData, getRuntimeTenantContext } from "./clinic-runtime";
 import type { AppEnv } from "./config";
 import { recordCustomerEvent } from "./customer-context-support";
+import {
+  sendBookingConfirmation,
+  sendBookingCancellation,
+} from "./email-service";
 import { readJsonBody, sendError, sendJson } from "./http";
 import { isLocationFeatureEnabled } from "./location-feature-support";
 import type { AppRepositories } from "./persistence/app-repositories";
@@ -768,6 +772,23 @@ export const handleAvailabilityAndBookingRoutes = async (input: {
           payload: parsedPayload,
         },
       });
+
+      // Fire-and-forget — email failure must never break the booking response
+      const tenantContext = getRuntimeTenantContext(input.env);
+      const durationMs =
+        new Date(draft.booking.endAt).getTime() - new Date(draft.booking.startAt).getTime();
+      sendBookingConfirmation(input.env, {
+        customerName: `${draft.booking.customer.firstName} ${draft.booking.customer.lastName}`.trim(),
+        customerEmail: draft.booking.customer.email ?? "",
+        serviceName: draft.booking.serviceName,
+        providerName: draft.booking.providerName,
+        locationName: tenantContext.locations.find((l) => l.slug === draft.booking.locationSlug)?.name ?? draft.booking.locationSlug,
+        startTime: draft.booking.startAt,
+        durationMinutes: Math.round(durationMs / 60_000),
+        bookingCode: draft.booking.id.slice(-8).toUpperCase(),
+        brandName: tenantContext.brandName,
+      }).catch((err) => console.error("[email] booking confirmation failed:", err));
+
       sendJson(input.response, 201, parsedPayload);
       return true;
     } catch (error) {
@@ -847,6 +868,15 @@ export const handleAvailabilityAndBookingRoutes = async (input: {
           },
           occurredAt: updatedBooking.updatedAt,
         });
+        const tenantContextForAdminCancel = getRuntimeTenantContext(input.env);
+        sendBookingCancellation(input.env, {
+          customerName: `${updatedBooking.customer.firstName} ${updatedBooking.customer.lastName}`.trim(),
+          customerEmail: updatedBooking.customer.email ?? "",
+          serviceName: updatedBooking.serviceName,
+          startTime: updatedBooking.startAt,
+          bookingCode: updatedBooking.id.slice(-8).toUpperCase(),
+          brandName: tenantContextForAdminCancel.brandName,
+        }).catch((err) => console.error("[email] admin booking cancellation email failed:", err));
         const responsePayload = adminBookingMutationResponseSchema.parse({
           ok: true,
           data: {
@@ -1113,6 +1143,15 @@ export const handleAvailabilityAndBookingRoutes = async (input: {
         },
         occurredAt: updatedBooking.updatedAt,
       });
+      const tenantContextForCancel = getRuntimeTenantContext(input.env);
+      sendBookingCancellation(input.env, {
+        customerName: `${updatedBooking.customer.firstName} ${updatedBooking.customer.lastName}`.trim(),
+        customerEmail: updatedBooking.customer.email ?? "",
+        serviceName: updatedBooking.serviceName,
+        startTime: updatedBooking.startAt,
+        bookingCode: updatedBooking.id.slice(-8).toUpperCase(),
+        brandName: tenantContextForCancel.brandName,
+      }).catch((err) => console.error("[email] booking cancellation email failed:", err));
       const responsePayload = bookingResponseSchema.parse({
         ok: true,
         data: {

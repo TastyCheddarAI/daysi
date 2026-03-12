@@ -1,5 +1,5 @@
 import type {
-  AiRunRecord,
+  AiProvider,
   SkinAssessmentIntakeRecord,
   SkinAssessmentRecord,
   TreatmentPlanRecord,
@@ -14,6 +14,7 @@ import {
   getTreatmentPlan,
   listTreatmentPlans,
   saveAiRun,
+  getAiRunById,
   saveSkinAssessmentIntake,
   saveSkinAssessmentRecord,
   saveTreatmentPlan,
@@ -22,9 +23,38 @@ import {
 
 type Awaitable<T> = T | Promise<T>;
 
+type AiRunSaveInput = {
+  id: string;
+  task: string;
+  locationSlug: string;
+  provider: AiProvider;
+  model: string;
+  promptVersion: string;
+  actorUserId?: string;
+  status: "pending" | "running" | "completed" | "failed";
+  sourceProvenance: Array<{
+    id: string;
+    kind: string;
+    referenceId: string;
+    title: string;
+    freshness: "static" | "runtime";
+  }>;
+  evaluation: {
+    groundingScore: number;
+    recommendationCoverageScore: number;
+    safetyFlags: string[];
+    notes: string[];
+  };
+  createdAt: string;
+  completedAt?: string;
+  failedAt?: string;
+  errorMessage?: string;
+};
+
 export interface ClinicalIntelligenceRepository {
   aiRuns: {
-    save(run: AiRunRecord): Awaitable<void>;
+    save(run: AiRunSaveInput): Awaitable<void>;
+    getById(id: string): Awaitable<{ id: string; status: "pending" | "running" | "completed" | "failed"; result?: unknown } | null>;
   };
   skinAssessments: {
     findIntakeByEvent(input: {
@@ -53,6 +83,7 @@ export const createInMemoryClinicalIntelligenceRepository =
       save: (run) => {
         saveAiRun(run);
       },
+      getById: (id) => getAiRunById(id),
     },
     skinAssessments: {
       findIntakeByEvent: findSkinAssessmentIntakeByEvent,

@@ -412,7 +412,7 @@ function ModulesTable({
                     {module.difficulty}
                   </Badge>
                 </TableCell>
-                <TableCell>{module.lessonCount}</TableCell>
+                <TableCell>{module.lessons.length}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <Clock className="h-3.5 w-3.5" />
@@ -540,7 +540,7 @@ function ModulesGrid({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <GraduationCap className="h-4 w-4" />
-                <span>{module.lessonCount} lessons</span>
+                <span>{module.lessons.length} lessons</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Clock className="h-4 w-4" />

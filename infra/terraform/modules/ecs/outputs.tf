@@ -47,3 +47,18 @@ output "task_role_arn" {
   description = "ARN of the ECS task role"
   value       = aws_iam_role.ecs_task.arn
 }
+
+output "migrate_task_definition_arn" {
+  description = "ARN of the migration ECS task definition"
+  value       = aws_ecs_task_definition.migrate.arn
+}
+
+output "private_subnet_ids" {
+  description = "Private subnet IDs used by ECS tasks"
+  value       = var.private_subnet_ids
+}
+
+output "alarms_sns_topic_arn" {
+  description = "ARN of the SNS topic for CloudWatch alarm notifications"
+  value       = aws_sns_topic.alarms.arn
+}

@@ -101,7 +101,7 @@ export default function ReferralDashboard() {
         <EmptyState
           title="Referral program coming soon"
           description="Our referral program is currently being set up. Check back soon!"
-          icon={<Gift className="h-8 w-8" />}
+          icon={Gift}
         />
       </div>
     );
@@ -306,7 +306,7 @@ export default function ReferralDashboard() {
             <EmptyState
               title="No invites yet"
               description="Start sharing your code to invite friends and earn rewards"
-              icon={<Users className="h-8 w-8" />}
+              icon={Users}
             />
           ) : (
             <div className="space-y-3">

@@ -229,7 +229,7 @@ export default function AdminProducts() {
                 <div className="text-xs text-muted-foreground">{product.slug}</div>
               </div>,
               <span key={`${product.slug}-price`}>
-                {formatMoney(product.price.amountCents, product.price.currency)}
+                {formatMoney(product.retailAmountCents, product.currency)}
               </span>,
             ])}
           />

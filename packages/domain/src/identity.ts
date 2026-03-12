@@ -14,7 +14,7 @@ export interface AppActor {
 export interface AccessAssignment {
   id: string;
   email: string;
-  role: StaffScopedRole;
+  role: StaffScopedRole | "owner";
   locationScopes: string[];
   passwordHash?: string; // Required for admin/owner roles
   createdAt: string;

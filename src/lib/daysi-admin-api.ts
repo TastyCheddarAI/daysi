@@ -7,6 +7,9 @@ import {
   type DaysiPublicService,
   type DaysiPublicServicePackage,
 } from "@/lib/daysi-public-api";
+
+// Re-export public types that admin consumers need access to through this module
+export type { DaysiPublicService, DaysiPublicServicePackage };
 import {
   exchangeDaysiBootstrapSessionForRole,
   type DaysiBootstrapRole,

@@ -337,7 +337,7 @@ resource "aws_ecs_task_definition" "api" {
       environment = [
         {
           name  = "DAYSI_RUNTIME_PROFILE"
-          value = var.environment == "prod" ? "cutover" : "bootstrap"
+          value = "cutover"
         },
         {
           name  = "DAYSI_ENV"
@@ -345,6 +345,10 @@ resource "aws_ecs_task_definition" "api" {
         },
         {
           name  = "DAYSI_ALLOW_BOOTSTRAP_SESSION_EXCHANGE"
+          value = var.environment == "prod" ? "false" : "true"
+        },
+        {
+          name  = "DATABASE_SSL"
           value = "true"
         }
       ]
@@ -369,6 +373,52 @@ resource "aws_ecs_task_definition" "api" {
     local.common_tags,
     {
       Name = "${var.project_name}-${var.environment}-api"
+    }
+  )
+}
+
+# ECS Task Definition for Database Migrations (one-off Fargate task)
+resource "aws_ecs_task_definition" "migrate" {
+  family                   = "${var.project_name}-${var.environment}-migrate"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_execution.arn
+  task_role_arn            = aws_iam_role.ecs_task.arn
+
+  container_definitions = jsonencode([
+    {
+      name    = "api"
+      image   = "${aws_ecr_repository.api.repository_url}:latest"
+      command = ["tsx", "apps/api/src/migrate.ts"]
+      environment = [
+        {
+          name  = "DATABASE_SSL"
+          value = "true"
+        }
+      ]
+      secrets = [
+        {
+          name      = "DATABASE_URL"
+          valueFrom = "arn:aws:secretsmanager:*:*:secret:${var.project_name}/${var.environment}/aurora/master-password"
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.ecs.name
+          awslogs-region        = data.aws_region.current.name
+          awslogs-stream-prefix = "migrate"
+        }
+      }
+    }
+  ])
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${var.project_name}-${var.environment}-migrate"
     }
   )
 }

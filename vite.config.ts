@@ -9,7 +9,7 @@ export default defineConfig(() => ({
     port: 8080,
   },
   build: {
-    outDir: "dist-new",
+    outDir: "dist",
     rollupOptions: {
       output: {
         manualChunks(id) {

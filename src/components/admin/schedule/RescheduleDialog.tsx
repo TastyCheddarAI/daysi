@@ -17,6 +17,7 @@ import {
   formatDaysiAdminSlotTime,
   groupAvailabilitySlotsByDate,
   type DaysiAdminBookingRecord,
+  type DaysiAvailabilitySlot,
   useDaysiBookingRebookingOptions,
   useRescheduleDaysiAdminBooking,
 } from "@/hooks/useDaysiAdminBookings";
@@ -53,7 +54,7 @@ export function RescheduleDialog({
 
   // Group availabilities by date
   const slotsByDate = useMemo(() => {
-    if (!availabilities) return new Map();
+    if (!availabilities) return new Map<string, DaysiAvailabilitySlot[]>();
     return groupAvailabilitySlotsByDate(availabilities);
   }, [availabilities]);
 

@@ -106,9 +106,8 @@ export function useUpdateDaysiAdminEducationModule() {
       const locationSlug = input.locationSlug ?? DAYSI_DEFAULT_LOCATION_SLUG;
       return updateDaysiAdminEducationModule({
         token: session.token!,
-        locationSlug,
-        slug: input.slug,
         ...input,
+        locationSlug,
       });
     },
     onSuccess: (_data, input) => {

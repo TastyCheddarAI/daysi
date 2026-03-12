@@ -210,7 +210,7 @@ export default function AdminAudit() {
             <EmptyState
               title="No audit entries"
               description="Try adjusting your filters"
-              icon={<ClipboardList className="h-8 w-8" />}
+              icon={ClipboardList}
             />
           ) : (
             <div className="space-y-4">

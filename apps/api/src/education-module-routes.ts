@@ -27,7 +27,7 @@ import type { AppEnv } from "./config";
 import { readJsonBody, sendError, sendJson } from "./http";
 import {
   isCanonicalDefinitionWriteEnabled,
-  persistCanonicalEducationModule,
+  persistCanonicalEducationOffer,
 } from "./persistence/canonical-definition-writes";
 import type { AppRepositories } from "./persistence/app-repositories";
 
@@ -514,7 +514,7 @@ export const handleEducationModuleRoutes = async (input: {
         sendError(
           input.response,
           503,
-          "service_unavailable",
+          "internal_error",
           `${payload.provider} API key not configured.`,
         );
         return true;

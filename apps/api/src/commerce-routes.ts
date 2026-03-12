@@ -25,7 +25,6 @@ import {
   buildMembershipProvisioningEffects,
   buildMembershipServiceAllowanceApplications,
   buildMembershipUsageProvisioningEffects,
-  buildRemainingServicePackageBalances,
   buildServicePackageProvisioningEffects,
   buildServicePackageRedemptionApplications,
   buildServicePackageUsageProvisioningEffects,
@@ -55,8 +54,10 @@ import {
   type QuoteItemInput,
 } from "../../../packages/domain/src";
 
-import { getRuntimeClinicData } from "./clinic-runtime";
+import { getRuntimeClinicData, getRuntimeTenantContext } from "./clinic-runtime";
 import type { AppEnv } from "./config";
+import { sendOrderConfirmation } from "./email-service";
+import { createPaymentIntent } from "./stripe-service";
 import { recordPaidBookingMetricEvents } from "./analytics-support";
 import { recordCustomerEvent } from "./customer-context-support";
 import { readJsonBody, readRawBody, sendError, sendJson } from "./http";
@@ -164,6 +165,29 @@ const canAccessStoredOrder = (input: {
     (input.actor?.userId && input.stored.order.actorUserId === input.actor.userId) ||
     (input.managementToken && input.managementToken === input.stored.managementToken)
   );
+
+/**
+ * If a real Stripe secret key is configured, create a live payment intent and
+ * return its ID and client secret. Otherwise returns undefined and the domain
+ * function will fall back to a bootstrap placeholder (dev/test only).
+ */
+const resolveStripePaymentIntent = async (input: {
+  env: AppEnv;
+  amountCents: number;
+  currency: string;
+  customerEmail?: string;
+}): Promise<{ paymentIntentId: string; clientSecret: string } | undefined> => {
+  if (!input.env.STRIPE_SECRET_KEY || input.amountCents === 0) {
+    return undefined;
+  }
+  return createPaymentIntent({
+    stripeSecretKey: input.env.STRIPE_SECRET_KEY,
+    amountCents: input.amountCents,
+    currency: input.currency,
+    orderId: "pending",
+    customerEmail: input.customerEmail,
+  });
+};
 
 const resolveQuoteItems = async (input: {
   env: AppEnv;
@@ -1074,10 +1098,18 @@ export const handleCommerceAndMembershipRoutes = async (input: {
         )
         .map((item) => item.plan);
 
+      const stripePaymentIntent = await resolveStripePaymentIntent({
+        env: input.env,
+        amountCents: quote.totalAmount.amountCents,
+        currency: quote.currency,
+        customerEmail: payload.customer.email,
+      });
+
       const confirmed = createOrderFromQuote({
         quote,
         customer: payload.customer,
         actorUserId: input.actor?.userId,
+        stripePaymentIntent,
         provisioning: [
           ...buildMembershipProvisioningEffects(pendingSubscriptions),
           ...buildMembershipUsageProvisioningEffects(serviceAllowanceApplications),
@@ -1242,10 +1274,18 @@ export const handleCommerceAndMembershipRoutes = async (input: {
           input.actor,
         ),
       });
+      const stripePaymentIntentForMembership = await resolveStripePaymentIntent({
+        env: input.env,
+        amountCents: quote.totalAmount.amountCents,
+        currency: quote.currency,
+        customerEmail: payload.customer.email,
+      });
+
       const confirmed = createOrderFromQuote({
         quote,
         customer: payload.customer,
         actorUserId: input.actor?.userId,
+        stripePaymentIntent: stripePaymentIntentForMembership,
         provisioning: [
           ...buildMembershipProvisioningEffects([subscription]),
           ...buildMembershipLearningProvisioningEffects({
@@ -1567,6 +1607,23 @@ export const handleCommerceAndMembershipRoutes = async (input: {
           bookings: await input.repositories.commerce.bookings.listAll(),
           occurredAt: nextOrder.paidAt,
         });
+
+        // Send order confirmation email (fire-and-forget)
+        if (storedOrder.order.status !== "paid" && nextOrder.customer.email) {
+          sendOrderConfirmation(input.env, {
+            customerName: `${nextOrder.customer.firstName} ${nextOrder.customer.lastName}`.trim(),
+            customerEmail: nextOrder.customer.email,
+            orderCode: nextOrder.code,
+            lineItems: nextOrder.lineItems.map((li) => ({
+              name: li.description,
+              amountCents: li.finalAmount.amountCents,
+              quantity: li.quantity,
+            })),
+            totalAmountCents: nextOrder.totalAmount.amountCents,
+            currency: nextOrder.currency,
+            brandName: getRuntimeTenantContext(input.env).brandName,
+          }).catch((err) => console.error("[email] order confirmation failed:", err));
+        }
       } else if (event.type === "payment_intent.payment_failed") {
         await restoreOrderAccountCredit(
           input.repositories,

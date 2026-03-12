@@ -540,11 +540,10 @@ export const handleCustomerContextRoutes = async (input: {
         entitlements: [],
         creditEntries: filterCustomerCreditEntries({
           creditEntries: await input.repositories.commerce.credits.listAll(),
-          locationSlug,
           customerEmail,
         }),
         skinAssessments: filterCustomerSkinAssessments({
-          skinAssessments: await input.repositories.clinicalIntelligence.skinAssessments.list(locationSlug),
+          assessments: await input.repositories.clinicalIntelligence.skinAssessments.list(locationSlug),
           locationSlug,
           customerEmail,
         }),
@@ -556,35 +555,36 @@ export const handleCustomerContextRoutes = async (input: {
       }
 
       // Update customer info via event
+      const nameParts = (context.customerName ?? "").split(" ");
       const updatedCustomer = {
-        ...context.profile,
-        firstName: body.firstName ?? context.profile.firstName,
-        lastName: body.lastName ?? context.profile.lastName,
-        email: body.email ?? context.profile.email,
-        phone: body.phone ?? context.profile.phone,
+        email: body.email ?? context.customerEmail,
+        firstName: body.firstName ?? nameParts[0] ?? "",
+        lastName: body.lastName ?? nameParts.slice(1).join(" ") ?? "",
+        phone: body.phone ?? undefined,
         updatedAt: new Date().toISOString(),
       };
 
       // Record update as an event for audit trail
       await input.repositories.engagement.customerEvents.save({
         id: `evt_${Date.now()}`,
-        type: "customer.updated",
+        source: "manual",
+        eventType: "customer.updated",
         customerEmail,
         locationSlug,
-        metadata: {
+        payload: {
           updatedBy: input.actor.userId,
           updatedByEmail: input.actor.email,
           changes: Object.keys(body),
         },
-        createdAt: new Date().toISOString(),
+        occurredAt: new Date().toISOString(),
       });
 
       // Record admin action
       recordAdminAction({
         actor: input.actor,
         action: "customer.updated",
-        resourceType: "customer",
-        resourceId: customerEmail,
+        entityType: "customer",
+        entityId: customerEmail,
         locationSlug,
         summary: `Updated customer ${customerEmail}`,
         repositories: input.repositories,

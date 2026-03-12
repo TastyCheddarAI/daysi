@@ -40,11 +40,13 @@ import {
   updateDaysiAdminProvider,
   updateDaysiAdminService,
 } from "@/lib/daysi-admin-api";
+export type { DaysiAdminServiceInput } from "@/lib/daysi-admin-api";
 import {
   DAYSI_DEFAULT_LOCATION_SLUG,
   DAYSI_API_BASE_URL,
   formatDaysiAvailabilityTime,
   groupAvailabilitySlotsByDate,
+  type DaysiAvailabilitySlot,
 } from "@/lib/daysi-public-api";
 import { useDaysiAdminSession } from "@/hooks/useDaysiAdminSession";
 
@@ -591,6 +593,7 @@ export type {
   DaysiWebsiteAnalyticsReport,
   DaysiMembershipPlan,
   DaysiMembershipPlanInput,
+  DaysiAvailabilitySlot,
 };
 
 // Membership Plan Management Hooks

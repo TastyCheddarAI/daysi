@@ -304,7 +304,7 @@ export default function AdminMemberships() {
             <EmptyState
               title="No service credits in use"
               description="Service credit usage will appear here once members start using their allowances."
-              icon={<Sparkles className="h-8 w-8" />}
+              icon={Sparkles}
             />
           ) : (
             <>

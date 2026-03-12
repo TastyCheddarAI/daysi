@@ -1,6 +1,6 @@
 import type {
   AdminActionLogEntry,
-  AiRunRecord,
+  AiProvider,
   BookingRecord,
   BookingStatus,
   CreditEntry,
@@ -55,6 +55,34 @@ interface StoredIdempotencyResponse {
   payload: unknown;
 }
 
+interface AiRunEntry {
+  id: string;
+  task: string;
+  locationSlug: string;
+  provider: AiProvider;
+  model: string;
+  promptVersion: string;
+  actorUserId?: string;
+  status: "pending" | "running" | "completed" | "failed";
+  sourceProvenance: Array<{
+    id: string;
+    kind: string;
+    referenceId: string;
+    title: string;
+    freshness: string;
+  }>;
+  evaluation: {
+    groundingScore: number;
+    recommendationCoverageScore: number;
+    safetyFlags: string[];
+    notes: string[];
+  };
+  createdAt: string;
+  completedAt?: string;
+  failedAt?: string;
+  errorMessage?: string;
+}
+
 const bookings = new Map<string, StoredBooking>();
 const creditEntries = new Map<string, CreditEntry>();
 const customerEvents = new Map<string, CustomerEventRecord>();
@@ -67,7 +95,7 @@ const orders = new Map<string, StoredOrder>();
 const providerPayoutRuns = new Map<string, ProviderPayoutRun>();
 const accessAssignments = new Map<string, AccessAssignment>();
 const adminActionLogEntries = new Map<string, AdminActionLogEntry>();
-const aiRuns = new Map<string, AiRunRecord>();
+const aiRuns = new Map<string, AiRunEntry>();
 const importJobs = new Map<string, ImportJob>();
 const importMappingProfiles = new Map<string, ImportMappingProfile>();
 const reconciliationIssues = new Map<string, ReconciliationIssue>();
@@ -518,11 +546,14 @@ export const hasOperationalMetricEvent = (input: {
       event.referenceId === input.referenceId,
   );
 
-export const saveAiRun = (run: AiRunRecord): void => {
+export const saveAiRun = (run: AiRunEntry): void => {
   aiRuns.set(run.id, run);
 };
 
-export const listAiRuns = (): AiRunRecord[] =>
+export const getAiRunById = (id: string): AiRunEntry | null =>
+  aiRuns.get(id) ?? null;
+
+export const listAiRuns = (): AiRunEntry[] =>
   [...aiRuns.values()].sort((left, right) =>
     right.createdAt.localeCompare(left.createdAt),
   );

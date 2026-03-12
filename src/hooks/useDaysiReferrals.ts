@@ -20,7 +20,7 @@ export function useDaysiMyReferral(locationSlug: string = DAYSI_DEFAULT_LOCATION
       if (!session.token) throw new Error("Not authenticated");
       const response = await fetchMyReferralOverview({ token: session.token, locationSlug });
       if (!response.ok) throw new Error(response.error?.message || "Failed to load referral data");
-      return response.data.overview;
+      return response.data!.overview;
     },
     enabled: session.ready && !!session.token,
     staleTime: 30_000,

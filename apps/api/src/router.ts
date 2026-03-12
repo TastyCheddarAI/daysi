@@ -47,6 +47,7 @@ import { handleImportRoutes } from "./import-routes";
 import { handleIntakeFormsRoutes } from "./intake-forms-routes";
 import { handleAuditRoutes } from "./audit-routes";
 import type { AppRepositories } from "./persistence/app-repositories";
+import { getCachedPool } from "./persistence/postgres-pool";
 
 const matchTenantLocationsPath = (pathname: string): { tenantSlug: string } | null => {
   const segments = pathname.split("/").filter(Boolean);
@@ -75,12 +76,17 @@ export const routeRequest = async (
   );
   const method = request.method ?? "GET";
   const tenantContext = getRuntimeTenantContext(env);
-  const rawActor = getActorFromAuthHeader(request.headers.authorization);
+  const rawActor = getActorFromAuthHeader(request.headers.authorization, env.DAYSI_SESSION_SECRET);
   const actor =
     rawActor &&
     (await validateBootstrapActorAccess(rawActor, repositories.configuration.accessAssignments))
       ? rawActor
       : null;
+
+  // Set actor header for request logging in server.ts
+  if (actor?.userId) {
+    response.setHeader("x-actor-id", actor.userId);
+  }
 
   if (method === "GET" && url.pathname === "/v1/health") {
     sendJson(
@@ -97,6 +103,37 @@ export const routeRequest = async (
         },
       }),
     );
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/v1/health/ready") {
+    const pool = getCachedPool();
+    let dbStatus: "ok" | "error" = "ok";
+    if (pool) {
+      try {
+        await Promise.race([
+          pool.query("SELECT 1"),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("DB health check timeout")), 1000),
+          ),
+        ]);
+        dbStatus = "ok";
+      } catch {
+        dbStatus = "error";
+      }
+    }
+    const allOk = dbStatus === "ok";
+    sendJson(response, allOk ? 200 : 503, {
+      ok: allOk,
+      data: {
+        service: "api",
+        status: allOk ? "ok" : "degraded",
+        db: dbStatus,
+        apiVersion: "v1",
+        environment: env.DAYSI_ENV,
+        time: new Date().toISOString(),
+      },
+    });
     return;
   }
 
@@ -161,6 +198,7 @@ export const routeRequest = async (
         payload,
         env.DAYSI_DEFAULT_LOCATION_SLUG,
         repositories.configuration.accessAssignments,
+        env.DAYSI_SESSION_SECRET,
       );
       sendJson(response, 200, sessionExchangeResponseSchema.parse({ ok: true, data: session }));
       return;
@@ -174,18 +212,19 @@ export const routeRequest = async (
   // Bootstrap endpoint to create admin access for an email (owner only)
   if (method === "POST" && url.pathname === "/v1/admin/bootstrap-admin") {
     try {
-      const payload = await readJsonBody(request, (body) => {
+      const payload = await readJsonBody(request, (rawBody) => {
+        const body = rawBody as Record<string, unknown>;
         if (typeof body.email !== "string" || typeof body.ownerSecret !== "string" || typeof body.password !== "string") {
           throw new Error("Invalid request body. Email, ownerSecret, and password are required.");
         }
         if (body.password.length < 8) {
           throw new Error("Password must be at least 8 characters.");
         }
-        return { 
-          email: body.email.toLowerCase(), 
-          ownerSecret: body.ownerSecret, 
+        return {
+          email: body.email.toLowerCase(),
+          ownerSecret: body.ownerSecret as string,
           password: body.password,
-          locationScopes: Array.isArray(body.locationScopes) ? body.locationScopes : undefined,
+          locationScopes: Array.isArray(body.locationScopes) ? body.locationScopes as string[] : undefined,
         };
       });
 
@@ -257,18 +296,23 @@ export const routeRequest = async (
   // Bootstrap endpoint to create first owner or set password for existing owner
   if (method === "POST" && url.pathname === "/v1/admin/bootstrap-owner") {
     try {
-      const payload = await readJsonBody(request, (body) => {
+      const payload = await readJsonBody(request, (rawBody) => {
+        const body = rawBody as Record<string, unknown>;
         if (typeof body.email !== "string" || typeof body.secret !== "string" || typeof body.password !== "string") {
           throw new Error("Invalid request body. Email, secret, and password are required.");
         }
         if (body.password.length < 8) {
           throw new Error("Password must be at least 8 characters.");
         }
-        return { email: body.email.toLowerCase(), secret: body.secret, password: body.password };
+        return { email: body.email.toLowerCase(), secret: body.secret as string, password: body.password };
       });
 
-      // Simple secret check (should match env var or hardcoded value for bootstrap)
-      if (payload.secret !== "daysi-bootstrap-2025") {
+      const bootstrapSecret = env.DAYSI_BOOTSTRAP_SECRET;
+      if (!bootstrapSecret) {
+        sendError(response, 503, "internal_error", "Bootstrap is not enabled on this instance.");
+        return;
+      }
+      if (payload.secret !== bootstrapSecret) {
         sendError(response, 403, "forbidden", "Invalid bootstrap secret.");
         return;
       }

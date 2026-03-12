@@ -1,7 +1,6 @@
 import type { Pool } from "pg";
 
 import type {
-  AiRunRecord,
   SkinAssessmentIntakeRecord,
   SkinAssessmentRecord,
   TreatmentPlanRecord,
@@ -104,6 +103,15 @@ export const createPostgresClinicalIntelligenceRepository = (
           run.completedAt,
         ],
       );
+    },
+    getById: async (id) => {
+      const result = await db.query<{ id: string; status: string }>(
+        `select id, status from clinical_ai_run where id = $1`,
+        [id],
+      );
+      const row = result.rows[0];
+      if (!row) return null;
+      return { id: row.id, status: row.status as "pending" | "running" | "completed" | "failed" };
     },
   },
   skinAssessments: {

@@ -37,3 +37,23 @@ output "cognito_domain" {
   description = "Cognito custom domain"
   value       = module.cognito.domain
 }
+
+output "ecs_security_group_id" {
+  description = "ECS security group ID (used for ECS_SECURITY_GROUP_PROD GitHub secret)"
+  value       = module.ecs.ecs_security_group_id
+}
+
+output "ecs_private_subnet_ids" {
+  description = "Private subnet IDs for ECS tasks (use first value for ECS_SUBNET_PROD GitHub secret)"
+  value       = module.ecs.private_subnet_ids
+}
+
+output "migrate_task_definition_arn" {
+  description = "ARN of the migration task definition"
+  value       = module.ecs.migrate_task_definition_arn
+}
+
+output "alarms_sns_topic_arn" {
+  description = "SNS topic ARN for CloudWatch alarm notifications"
+  value       = module.ecs.alarms_sns_topic_arn
+}

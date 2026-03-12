@@ -6,6 +6,9 @@ const clinicDefinitionRepositoryModeSchema = z.enum(["bootstrap", "postgres"]);
 const appEnvSchema = z.object({
   DAYSI_RUNTIME_PROFILE: z.enum(["bootstrap", "cutover"]).default("bootstrap"),
   DAYSI_ENV: z.string().default("development"),
+  DAYSI_SESSION_SECRET: z.string().min(32).optional(),
+  DAYSI_BOOTSTRAP_SECRET: z.string().optional(),
+  DAYSI_CORS_ORIGINS: z.string().optional(),
   DAYSI_BRAND_SLUG: z.string().default("daysi"),
   DAYSI_API_HOST: z.string().default("127.0.0.1"),
   DAYSI_API_PORT: z.coerce.number().int().min(0).default(4010),
@@ -31,17 +34,24 @@ const appEnvSchema = z.object({
   DATABASE_URL: z.string().optional(),
   DATABASE_SSL: z.enum(["true", "false"]).default("false"),
   DATABASE_MAX_CONNECTIONS: z.coerce.number().int().positive().default(10),
+  STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   SKIN_ANALYZER_WEBHOOK_SECRET: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
   XAI_API_KEY: z.string().optional(),
   PERPLEXITY_API_KEY: z.string().optional(),
   KIMI_API_KEY: z.string().optional(),
+  AWS_REGION: z.string().default("us-east-1"),
+  SES_FROM_EMAIL: z.string().email().optional(),
+  SES_FROM_NAME: z.string().optional(),
 });
 
 export interface AppEnv {
   DAYSI_RUNTIME_PROFILE: "bootstrap" | "cutover";
   DAYSI_ENV: string;
+  DAYSI_SESSION_SECRET?: string;
+  DAYSI_BOOTSTRAP_SECRET?: string;
+  DAYSI_CORS_ORIGINS?: string;
   DAYSI_BRAND_SLUG: string;
   DAYSI_API_HOST: string;
   DAYSI_API_PORT: number;
@@ -66,12 +76,16 @@ export interface AppEnv {
   DATABASE_URL?: string;
   DATABASE_SSL: boolean;
   DATABASE_MAX_CONNECTIONS: number;
+  STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
   SKIN_ANALYZER_WEBHOOK_SECRET?: string;
   OPENAI_API_KEY?: string;
   XAI_API_KEY?: string;
   PERPLEXITY_API_KEY?: string;
   KIMI_API_KEY?: string;
+  AWS_REGION: string;
+  SES_FROM_EMAIL?: string;
+  SES_FROM_NAME?: string;
 }
 
 const usesPostgresPersistence = (env: AppEnv): boolean =>
@@ -114,6 +128,13 @@ export const loadAppEnv = (source: NodeJS.ProcessEnv = process.env): AppEnv => {
 
   const resolvedEnv: AppEnv = {
     ...parsed,
+    DAYSI_SESSION_SECRET: parsed.DAYSI_SESSION_SECRET,
+    DAYSI_BOOTSTRAP_SECRET: parsed.DAYSI_BOOTSTRAP_SECRET,
+    DAYSI_CORS_ORIGINS: parsed.DAYSI_CORS_ORIGINS,
+    AWS_REGION: parsed.AWS_REGION,
+    SES_FROM_EMAIL: parsed.SES_FROM_EMAIL,
+    SES_FROM_NAME: parsed.SES_FROM_NAME,
+    STRIPE_SECRET_KEY: parsed.STRIPE_SECRET_KEY,
     DAYSI_ALLOW_BOOTSTRAP_SESSION_EXCHANGE: allowBootstrapSessionExchange,
     DAYSI_CLINIC_DEFINITION_REPOSITORY: cutoverRepositoryMode(
       runtimeProfile,

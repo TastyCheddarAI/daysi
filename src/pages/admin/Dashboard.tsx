@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { addDays, format, isToday, startOfDay, subDays } from "date-fns";
 import {
   ArrowUpRight,
@@ -47,6 +47,7 @@ const formatMoney = (amountCents: number, currency: string) =>
   }).format(amountCents / 100);
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const session = useDaysiAdminSession();
   const { isAdmin } = useAdminAuth();
   const locationSlug = DAYSI_DEFAULT_LOCATION_SLUG;
@@ -329,7 +330,7 @@ export default function AdminDashboard() {
               <EmptyState
                 title="No appointments today"
                 description="Your schedule is clear for today."
-                action={{ label: "View Schedule", to: "/admin/schedule" }}
+                action={{ label: "View Schedule", onClick: () => navigate("/admin/schedule") }}
               />
             ) : (
               <div className="space-y-2">

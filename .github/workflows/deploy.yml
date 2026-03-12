@@ -141,6 +141,27 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_NONPROD:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_NONPROD:latest
 
+      - name: Run database migrations (nonprod)
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          TASK_ARN=$(aws ecs run-task \
+            --cluster daysi-nonprod \
+            --task-definition daysi-nonprod-migrate \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.ECS_SUBNET_NONPROD }}],securityGroups=[${{ secrets.ECS_SECURITY_GROUP_NONPROD }}],assignPublicIp=DISABLED}" \
+            --overrides "{\"containerOverrides\":[{\"name\":\"api\",\"command\":[\"tsx\",\"apps/api/src/migrate.ts\"]}]}" \
+            --query "tasks[0].taskArn" --output text)
+          echo "Migration task ARN: $TASK_ARN"
+          aws ecs wait tasks-stopped --cluster daysi-nonprod --tasks $TASK_ARN
+          EXIT_CODE=$(aws ecs describe-tasks \
+            --cluster daysi-nonprod \
+            --tasks $TASK_ARN \
+            --query "tasks[0].containers[0].exitCode" --output text)
+          echo "Migration exit code: $EXIT_CODE"
+          [ "$EXIT_CODE" = "0" ] || (echo "Migration failed" && exit 1)
+
       - name: Deploy to ECS
         run: |
           aws ecs update-service \
@@ -198,6 +219,27 @@ jobs:
             -f apps/api/Dockerfile .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_PROD:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_PROD:latest
+
+      - name: Run database migrations (prod)
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          TASK_ARN=$(aws ecs run-task \
+            --cluster daysi-prod \
+            --task-definition daysi-prod-migrate \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.ECS_SUBNET_PROD }}],securityGroups=[${{ secrets.ECS_SECURITY_GROUP_PROD }}],assignPublicIp=DISABLED}" \
+            --overrides "{\"containerOverrides\":[{\"name\":\"api\",\"command\":[\"tsx\",\"apps/api/src/migrate.ts\"]}]}" \
+            --query "tasks[0].taskArn" --output text)
+          echo "Migration task ARN: $TASK_ARN"
+          aws ecs wait tasks-stopped --cluster daysi-prod --tasks $TASK_ARN
+          EXIT_CODE=$(aws ecs describe-tasks \
+            --cluster daysi-prod \
+            --tasks $TASK_ARN \
+            --query "tasks[0].containers[0].exitCode" --output text)
+          echo "Migration exit code: $EXIT_CODE"
+          [ "$EXIT_CODE" = "0" ] || (echo "Migration failed" && exit 1)
 
       - name: Deploy to ECS
         run: |

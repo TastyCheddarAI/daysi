@@ -911,10 +911,29 @@ export const createOrderFromQuote = (input: {
   actorUserId?: string;
   provisioning?: CommerceOrderProvisioningEffect[];
   now?: string;
+  /**
+   * Real Stripe payment intent data to embed in the order.
+   * When provided (production mode), the order reflects the actual Stripe intent.
+   * When absent (bootstrap/test mode), a placeholder is generated — replace before going live.
+   */
+  stripePaymentIntent?: { paymentIntentId: string; clientSecret: string };
 }): { order: OrderRecord; paymentSession: PaymentSession; managementToken: string } => {
   const now = input.now ?? new Date().toISOString();
   const requiresPayment = input.quote.totalAmount.amountCents > 0;
-  const paymentIntentId = requiresPayment ? `pi_${randomUUID().replaceAll("-", "")}` : undefined;
+
+  let paymentIntentId: string | undefined;
+  let clientSecret: string | undefined;
+
+  if (requiresPayment) {
+    if (input.stripePaymentIntent) {
+      paymentIntentId = input.stripePaymentIntent.paymentIntentId;
+      clientSecret = input.stripePaymentIntent.clientSecret;
+    } else {
+      // Bootstrap placeholder — only acceptable in development/test mode
+      paymentIntentId = `pi_${randomUUID().replaceAll("-", "")}`;
+      clientSecret = `${paymentIntentId}_secret_bootstrap`;
+    }
+  }
 
   return {
     order: {
@@ -943,7 +962,7 @@ export const createOrderFromQuote = (input: {
       ? {
           provider: "stripe",
           paymentIntentId,
-          clientSecret: `${paymentIntentId}_secret_bootstrap`,
+          clientSecret,
           status: "requires_payment_method",
         }
       : {

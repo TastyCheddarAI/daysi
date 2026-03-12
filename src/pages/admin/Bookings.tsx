@@ -275,7 +275,7 @@ export default function AdminBookings() {
     setSelectedBooking(booking);
     setFormData({
       customerEmail: booking.customer.email,
-      customerName: booking.customer.name || "",
+      customerName: `${booking.customer.firstName} ${booking.customer.lastName}`.trim(),
       customerPhone: booking.customer.phone || "",
       serviceSlug: booking.serviceSlug,
       providerSlug: booking.providerSlug,
@@ -378,7 +378,7 @@ export default function AdminBookings() {
               <SelectContent>
                 {providers.map((provider) => (
                   <SelectItem key={provider.providerSlug} value={provider.providerSlug}>
-                    {provider.name}
+                    {provider.providerName}
                   </SelectItem>
                 ))}
               </SelectContent>

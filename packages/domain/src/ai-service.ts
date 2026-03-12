@@ -1,6 +1,6 @@
+import type { AiProvider } from "./ai";
 import type {
   AiGeneratedModuleContent,
-  AiProvider,
   GenerateModuleContentInput,
   LessonContentBlock,
 } from "./education";
@@ -93,7 +93,7 @@ export class OpenAiService implements AiService {
         };
       }
 
-      const result = await response.json();
+      const result = await response.json() as any;
       const content = result.choices[0]?.message?.content;
 
       if (!content) {
@@ -168,7 +168,7 @@ export class OpenAiService implements AiService {
         };
       }
 
-      const result = await response.json();
+      const result = await response.json() as any;
       const content = result.choices[0]?.message?.content;
 
       if (!content) {
@@ -246,7 +246,7 @@ export class OpenAiService implements AiService {
         };
       }
 
-      const result = await response.json();
+      const result = await response.json() as any;
 
       return {
         success: true,
@@ -319,7 +319,7 @@ export class XAiService implements AiService {
         };
       }
 
-      const result = await response.json();
+      const result = await response.json() as any;
       const content = result.choices[0]?.message?.content;
 
       // Extract JSON from response
@@ -424,7 +424,7 @@ export class PerplexityService implements AiService {
         };
       }
 
-      const result = await response.json();
+      const result = await response.json() as any;
       const content = result.choices[0]?.message?.content;
 
       // Extract JSON
@@ -530,7 +530,7 @@ export class KimiService implements AiService {
         };
       }
 
-      const result = await response.json();
+      const result = await response.json() as any;
       const content = result.choices[0]?.message?.content;
 
       if (!content) {

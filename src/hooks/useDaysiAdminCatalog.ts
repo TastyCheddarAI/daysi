@@ -30,9 +30,12 @@ export function useDaysiAdminServices(
 export function useDaysiAdminProducts(
   locationSlug: string = DAYSI_DEFAULT_LOCATION_SLUG,
 ) {
+  const session = useDaysiAdminSession();
+
   return useQuery({
     queryKey: ["daysi-admin-products", locationSlug],
-    queryFn: async () => listDaysiAdminProducts(locationSlug),
+    queryFn: async () => listDaysiAdminProducts({ token: session.token!, locationSlug }),
+    enabled: session.ready,
     staleTime: 60_000,
   });
 }

@@ -21,3 +21,5 @@ export const getPostgresPool = (env: AppEnv): Pool => {
 
   return cachedPool;
 };
+
+export const getCachedPool = (): Pool | undefined => cachedPool;

@@ -89,11 +89,11 @@ export default function AdminReferrals() {
     return {
       totalPrograms: programs.length,
       activePrograms: programs.filter((p) => p.status === "active").length,
-      totalInvites: programs.reduce((sum, p) => sum + (p.stats?.totalInvites || 0), 0),
-      qualifiedInvites: programs.reduce((sum, p) => sum + (p.stats?.qualifiedInvites || 0), 0),
-      conversionRate: programs.length > 0 ? 50 : 0, // Placeholder - would come from real stats
-      totalRewardsGiven: programs.reduce((sum, p) => sum + (p.stats?.totalRewardsGiven || 0), 0),
-      activeParticipants: programs.reduce((sum, p) => sum + (p.stats?.activeParticipants || 0), 0),
+      totalInvites: 0,
+      qualifiedInvites: 0,
+      conversionRate: 0,
+      totalRewardsGiven: 0,
+      activeParticipants: 0,
     };
   }, [programs]);
 
@@ -284,7 +284,7 @@ export default function AdminReferrals() {
               title="No referral programs"
               description="Create your first referral program to start growing your customer base"
               action={{ label: "Create Program", onClick: handleCreate }}
-              icon={<Gift className="h-8 w-8" />}
+              icon={Gift}
             />
           ) : (
             <div className="space-y-4">

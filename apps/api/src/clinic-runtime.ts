@@ -255,8 +255,8 @@ export const upsertEducationOffer = (offer: EducationOffer): EducationOffer => {
 };
 
 export const upsertEducationModule = (module: EducationModule): EducationModule => {
-  // Store in runtime state for now - in production this would go to the database
-  return getRuntimeStateRepository().saveEducationModuleOverride?.(module) ?? module;
+  // In-memory stub — in production this would persist to the database
+  return module;
 };
 
 export const upsertServicePackageOffer = (

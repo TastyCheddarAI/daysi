@@ -34,7 +34,8 @@ export const tenantLocationSummarySchema = z.object({
 
 export const healthDataSchema = z.object({
   service: z.literal("api"),
-  status: z.literal("ok"),
+  status: z.enum(["ok", "degraded"]),
+  db: z.enum(["ok", "error"]).optional(),
   apiVersion: apiVersionSchema,
   environment: z.string().min(1),
   time: isoTimestampSchema,

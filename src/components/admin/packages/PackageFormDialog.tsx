@@ -90,7 +90,7 @@ export function PackageFormDialog({
         currency: initialValues?.price?.currency ?? "CAD",
         amountCents: initialValues?.price?.amountCents ?? 0,
       },
-      serviceCredits: initialValues?.serviceCredits?.map((c) => ({
+      serviceCredits: initialValues?.serviceCredits?.map((c: { serviceSlug: string; quantity: number }) => ({
         serviceSlug: c.serviceSlug,
         quantity: c.quantity,
       })) ?? [],
