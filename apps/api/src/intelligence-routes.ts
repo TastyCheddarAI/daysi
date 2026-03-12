@@ -129,17 +129,51 @@ export const handleIntelligenceRoutes = async (input: {
       locations?: Array<{ name: string; code: number }>;
     });
 
+    // Full keyword universe for Winnipeg/MB laser aesthetics market.
+    // Callers can override by posting { services: [...], locations: [...] }.
     const services = body.services ?? [
+      // Hair removal
       "laser hair removal",
+      "laser hair removal legs",
+      "laser hair removal bikini",
+      "laser hair removal underarms",
+      "laser hair removal face",
+      "laser hair removal full body",
+      "ipl hair removal",
+      "permanent hair removal",
+      // Injectables
       "botox",
-      "facial",
+      "botox forehead",
+      "lip filler",
+      "lip injections",
+      "dermal fillers",
+      "anti wrinkle injections",
+      // Skin treatments
       "microneedling",
+      "rf microneedling",
       "chemical peel",
+      "laser skin resurfacing",
+      "photofacial",
+      "skin rejuvenation",
+      "hydrafacial",
+      // Condition-based (highest intent)
+      "acne scar treatment",
+      "rosacea treatment",
+      "hyperpigmentation treatment",
+      "sun spot removal",
+      "skin tightening",
+      "tattoo removal",
+      "melasma treatment",
+      // Business-type
+      "med spa",
+      "laser clinic",
+      "aesthetic clinic",
+      "medical aesthetics",
     ];
 
     const locations = body.locations ?? [
       { name: "Winnipeg, MB", code: DATAFORSEO_LOCATION_CODES.winnipeg },
-      { name: "Manitoba", code: DATAFORSEO_LOCATION_CODES.manitoba },
+      { name: "Steinbach, MB", code: DATAFORSEO_LOCATION_CODES.manitoba },
     ];
 
     try {
@@ -195,12 +229,25 @@ export const handleIntelligenceRoutes = async (input: {
 
     const body = await readJsonBody(request, (b) => b as { services?: string[] });
     const services = body.services ?? [
+      // High-volume services to watch on social
       "laser hair removal",
       "botox",
-      "filler",
-      "facial",
+      "lip filler",
+      "lip injections",
       "microneedling",
+      "hydrafacial",
       "skin care",
+      "acne scar treatment",
+      "skin tightening",
+      "chemical peel",
+      "laser skin",
+      "med spa",
+      "aesthetic clinic",
+      // Trending formats & topics in the aesthetics space
+      "glow skin",
+      "glass skin",
+      "skin barrier",
+      "anti aging skin care",
     ];
 
     try {

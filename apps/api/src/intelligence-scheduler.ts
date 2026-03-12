@@ -79,21 +79,112 @@ const buildAiClient = (apiKey: string, baseUrl: string, model: string): Intellig
 });
 
 // ─── Default scan config ───────────────────────────────────────────────────────
+//
+// Full keyword universe for a laser aesthetics clinic serving Winnipeg, MB
+// and surrounding area (Niverville, Steinbach, South Winnipeg).
+//
+// Grouped by intent category so buildKeywordVariants applies the right
+// variant strategy per group.
+//
+// ── Hair removal (highest volume, primary revenue driver) ────────────────────
+const HAIR_REMOVAL_SERVICES = [
+  "laser hair removal",
+  "laser hair removal legs",
+  "laser hair removal bikini",
+  "laser hair removal underarms",
+  "laser hair removal face",
+  "laser hair removal full body",
+  "laser hair removal back",
+  "ipl hair removal",
+  "permanent hair removal",
+  "laser body hair removal",
+];
 
-const DEFAULT_SERVICES = [
+// ── Injectables (high-value, recurring revenue) ───────────────────────────────
+const INJECTABLE_SERVICES = [
+  "botox",
+  "botox forehead",
+  "lip filler",
+  "lip injections",
+  "dermal fillers",
+  "cheek filler",
+  "jawline filler",
+  "anti wrinkle injections",
+];
+
+// ── Skin treatments (growing category, strong social trends) ─────────────────
+const SKIN_TREATMENT_SERVICES = [
+  "microneedling",
+  "rf microneedling",
+  "chemical peel",
+  "laser skin resurfacing",
+  "photofacial",
+  "ipl photofacial",
+  "skin rejuvenation",
+  "laser facial",
+  "hydrafacial",
+];
+
+// ── Condition-based (highest buying intent — problem-aware searchers) ─────────
+const CONDITION_SERVICES = [
+  "acne scar treatment",
+  "rosacea treatment",
+  "hyperpigmentation treatment",
+  "sun spot removal",
+  "age spot removal",
+  "broken capillaries treatment",
+  "skin tightening",
+  "tattoo removal",
+  "stretch mark treatment",
+  "melasma treatment",
+];
+
+// ── Business-type (awareness & comparison shoppers) ───────────────────────────
+const BUSINESS_TYPE_SERVICES = [
+  "med spa",
+  "medical spa",
+  "laser clinic",
+  "aesthetic clinic",
+  "medical aesthetics",
+  "skin care clinic",
+];
+
+const ALL_WINNIPEG_SERVICES = [
+  ...HAIR_REMOVAL_SERVICES,
+  ...INJECTABLE_SERVICES,
+  ...SKIN_TREATMENT_SERVICES,
+  ...CONDITION_SERVICES,
+  ...BUSINESS_TYPE_SERVICES,
+];
+
+// Steinbach (18k pop, growing fast, nearest major centre to Niverville ~20min away)
+// Lower volume but near-zero competition — easy to rank #1
+const STEINBACH_PRIORITY_SERVICES = [
   "laser hair removal",
   "botox",
-  "facial",
+  "lip filler",
+  "med spa",
+  "laser clinic",
+  "aesthetic clinic",
   "microneedling",
-  "chemical peel",
-  "dermal filler",
-  "skin rejuvenation",
+  "acne scar treatment",
 ];
 
 const DEFAULT_LOCATIONS = [
-  { services: DEFAULT_SERVICES, locationName: "Winnipeg, MB", locationCode: DATAFORSEO_LOCATION_CODES.winnipeg },
-  { services: DEFAULT_SERVICES, locationName: "Manitoba", locationCode: DATAFORSEO_LOCATION_CODES.manitoba },
+  {
+    services: ALL_WINNIPEG_SERVICES,
+    locationName: "Winnipeg, MB",
+    locationCode: DATAFORSEO_LOCATION_CODES.winnipeg,
+  },
+  {
+    services: STEINBACH_PRIORITY_SERVICES,
+    locationName: "Steinbach, MB",
+    locationCode: DATAFORSEO_LOCATION_CODES.manitoba, // Manitoba province code until Steinbach code is verified
+  },
 ];
+
+// Also used for social trend scans — broader service list for trend detection
+const DEFAULT_SERVICES = ALL_WINNIPEG_SERVICES;
 
 // ─── Individual scan runners ──────────────────────────────────────────────────
 

@@ -445,14 +445,102 @@ function extractJson<T>(raw: string): T | null {
   }
 }
 
+// Keyword categories that get different variant strategies
+const HAIR_REMOVAL_SERVICES = new Set([
+  "laser hair removal",
+  "ipl hair removal",
+  "permanent hair removal",
+  "laser hair removal legs",
+  "laser hair removal bikini",
+  "laser hair removal underarms",
+  "laser hair removal face",
+  "laser hair removal full body",
+  "laser hair removal back",
+  "laser body hair removal",
+]);
+
+const INJECTABLE_SERVICES = new Set([
+  "botox",
+  "lip filler",
+  "lip injections",
+  "dermal fillers",
+  "cheek filler",
+  "jawline filler",
+  "anti wrinkle injections",
+  "botox forehead",
+]);
+
+const CONDITION_SERVICES = new Set([
+  "acne scar treatment",
+  "rosacea treatment",
+  "hyperpigmentation treatment",
+  "sun spot removal",
+  "age spot removal",
+  "broken capillaries treatment",
+  "skin tightening",
+  "tattoo removal",
+]);
+
+const BUSINESS_TYPE_SERVICES = new Set([
+  "med spa",
+  "medical spa",
+  "laser clinic",
+  "aesthetic clinic",
+  "medical aesthetics",
+  "skin care clinic",
+  "cosmetic clinic",
+]);
+
 function buildKeywordVariants(service: string, location: string): string[] {
-  const city = location.split(",")[0].trim();
-  return [
-    `${service} ${city}`,
-    `${service} near me`,
-    `best ${service} ${city}`,
-    `${service} cost ${city}`,
-  ];
+  const city = location.split(",")[0].trim(); // "Winnipeg"
+  const variants: string[] = [];
+
+  if (BUSINESS_TYPE_SERVICES.has(service)) {
+    // Business-type: city-specific + near me + "best"
+    variants.push(
+      `${service} ${city}`,
+      `best ${service} ${city}`,
+      `${service} near me`,
+      `top rated ${service} ${city}`,
+    );
+  } else if (CONDITION_SERVICES.has(service)) {
+    // Condition-based: city + near me + cost + results
+    variants.push(
+      `${service} ${city}`,
+      `${service} near me`,
+      `${service} cost ${city}`,
+      `${service} before and after ${city}`,
+    );
+  } else if (INJECTABLE_SERVICES.has(service)) {
+    // Injectables: city + cost/price + near me + reviews
+    variants.push(
+      `${service} ${city}`,
+      `${service} near me`,
+      `${service} cost ${city}`,
+      `${service} price ${city}`,
+      `best ${service} ${city}`,
+    );
+  } else if (HAIR_REMOVAL_SERVICES.has(service)) {
+    // Hair removal: city + near me + cost + permanent + reviews
+    variants.push(
+      `${service} ${city}`,
+      `${service} near me`,
+      `${service} cost ${city}`,
+      `${service} price ${city}`,
+      `best ${service} ${city}`,
+      `${service} reviews ${city}`,
+    );
+  } else {
+    // General skin treatments
+    variants.push(
+      `${service} ${city}`,
+      `${service} near me`,
+      `best ${service} ${city}`,
+      `${service} cost ${city}`,
+    );
+  }
+
+  return variants;
 }
 
 function buildModuleTitleFromKeyword(keyword: string): string {
