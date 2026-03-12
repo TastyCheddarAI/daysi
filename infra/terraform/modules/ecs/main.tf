@@ -5,6 +5,12 @@ locals {
       Module = "ecs"
     }
   )
+
+  # Naming convention for the single AI/integration keys secret (JSON object)
+  # Create it with: aws secretsmanager create-secret \
+  #   --name daysi/{env}/api-keys \
+  #   --secret-string '{"OPENAI_API_KEY":"sk-...","PERPLEXITY_API_KEY":"pplx-...",...}'
+  api_keys_secret_name = "${var.project_name}/${var.environment}/api-keys"
 }
 
 # ECS Cluster
@@ -35,6 +41,24 @@ resource "aws_ecs_cluster_capacity_providers" "main" {
     weight            = 1
     capacity_provider = "FARGATE"
   }
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# API key secrets — stored as a single JSON secret in Secrets Manager.
+# Create / update with:
+#   aws secretsmanager create-secret --name daysi/{env}/api-keys \
+#     --secret-string '{
+#       "OPENAI_API_KEY": "sk-...",
+#       "PERPLEXITY_API_KEY": "pplx-...",
+#       "XAI_API_KEY": "xai-...",
+#       "KIMI_API_KEY": "sk-...",
+#       "DATAFORSEO_LOGIN": "your@email.com",
+#       "DATAFORSEO_PASSWORD": "yourpassword"
+#     }'
+# ─────────────────────────────────────────────────────────────────────────────
+
+data "aws_secretsmanager_secret" "api_keys" {
+  name = local.api_keys_secret_name
 }
 
 # CloudWatch Log Group for ECS
@@ -356,6 +380,32 @@ resource "aws_ecs_task_definition" "api" {
         {
           name      = "DATABASE_URL"
           valueFrom = var.database_url_secret_arn
+        },
+        # Each entry pulls a single JSON key from the api-keys secret.
+        # Format: arn:...:secret-name:json-key::
+        {
+          name      = "OPENAI_API_KEY"
+          valueFrom = "${data.aws_secretsmanager_secret.api_keys.arn}:OPENAI_API_KEY::"
+        },
+        {
+          name      = "PERPLEXITY_API_KEY"
+          valueFrom = "${data.aws_secretsmanager_secret.api_keys.arn}:PERPLEXITY_API_KEY::"
+        },
+        {
+          name      = "XAI_API_KEY"
+          valueFrom = "${data.aws_secretsmanager_secret.api_keys.arn}:XAI_API_KEY::"
+        },
+        {
+          name      = "KIMI_API_KEY"
+          valueFrom = "${data.aws_secretsmanager_secret.api_keys.arn}:KIMI_API_KEY::"
+        },
+        {
+          name      = "DATAFORSEO_LOGIN"
+          valueFrom = "${data.aws_secretsmanager_secret.api_keys.arn}:DATAFORSEO_LOGIN::"
+        },
+        {
+          name      = "DATAFORSEO_PASSWORD"
+          valueFrom = "${data.aws_secretsmanager_secret.api_keys.arn}:DATAFORSEO_PASSWORD::"
         }
       ]
       logConfiguration = {

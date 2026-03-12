@@ -46,6 +46,7 @@ import { handleWaitlistRoutes } from "./waitlist-routes";
 import { handleImportRoutes } from "./import-routes";
 import { handleIntakeFormsRoutes } from "./intake-forms-routes";
 import { handleAuditRoutes } from "./audit-routes";
+import { handleIntelligenceRoutes } from "./intelligence-routes";
 import type { AppRepositories } from "./persistence/app-repositories";
 import { getCachedPool } from "./persistence/postgres-pool";
 
@@ -729,6 +730,20 @@ export const routeRequest = async (
       env,
       actor,
       repositories,
+    })
+  ) {
+    return;
+  }
+
+  if (
+    await handleIntelligenceRoutes({
+      method,
+      pathname: url.pathname,
+      request,
+      response,
+      env,
+      actor,
+      intelligenceRepo: repositories.marketIntelligence,
     })
   ) {
     return;

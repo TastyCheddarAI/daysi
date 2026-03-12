@@ -43,6 +43,7 @@ import {
 } from "./postgres-package-credit-repository";
 import { createPostgresOperationsRepository } from "./postgres-operations-repository";
 import { createPostgresReliabilityRepository } from "./postgres-reliability-repository";
+import { createPostgresMarketIntelligenceRepository } from "./postgres-market-intelligence-repository";
 import { getPostgresPool } from "./postgres-pool";
 import {
   createInMemoryReliabilityRepository,
@@ -60,6 +61,10 @@ import {
   createInMemoryAuditRepository,
   type AuditRepository,
 } from "./audit-repository";
+import {
+  createInMemoryMarketIntelligenceRepository,
+  type MarketIntelligenceRepository,
+} from "../../../../packages/domain/src/market-intelligence";
 
 export interface AppRepositories {
   clinicalIntelligence: ClinicalIntelligenceRepository;
@@ -73,6 +78,7 @@ export interface AppRepositories {
   imports: ImportRepository;
   intakeForms: IntakeFormsRepository;
   audit: AuditRepository;
+  marketIntelligence: MarketIntelligenceRepository;
 }
 
 export const createInMemoryAppRepositories = (): AppRepositories => ({
@@ -87,6 +93,7 @@ export const createInMemoryAppRepositories = (): AppRepositories => ({
   imports: createInMemoryImportRepository(),
   intakeForms: createInMemoryIntakeFormsRepository(),
   audit: createInMemoryAuditRepository(),
+  marketIntelligence: createInMemoryMarketIntelligenceRepository(),
 });
 
 export const createAppRepositories = (env: AppEnv): AppRepositories => ({
@@ -110,7 +117,8 @@ export const createAppRepositories = (env: AppEnv): AppRepositories => ({
       env.DAYSI_GROWTH_REPOSITORY === "postgres" ||
       env.DAYSI_ENGAGEMENT_REPOSITORY === "postgres" ||
       env.DAYSI_OPERATIONS_REPOSITORY === "postgres" ||
-      env.DAYSI_RELIABILITY_REPOSITORY === "postgres";
+      env.DAYSI_RELIABILITY_REPOSITORY === "postgres" ||
+      env.DAYSI_MARKET_INTELLIGENCE_REPOSITORY === "postgres";
     const pool = needsPostgresPool ? getPostgresPool(env) : undefined;
 
     if (env.DAYSI_BOOKING_REPOSITORY === "postgres") {
@@ -166,6 +174,10 @@ export const createAppRepositories = (env: AppEnv): AppRepositories => ({
       imports: createInMemoryImportRepository(),
       intakeForms: createInMemoryIntakeFormsRepository(),
       audit: createInMemoryAuditRepository(),
+      marketIntelligence:
+        env.DAYSI_MARKET_INTELLIGENCE_REPOSITORY === "postgres"
+          ? createPostgresMarketIntelligenceRepository(pool!)
+          : createInMemoryMarketIntelligenceRepository(),
     };
   })(),
 });

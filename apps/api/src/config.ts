@@ -31,6 +31,7 @@ const appEnvSchema = z.object({
   DAYSI_ENGAGEMENT_REPOSITORY: repositoryModeSchema.default("memory"),
   DAYSI_OPERATIONS_REPOSITORY: repositoryModeSchema.default("memory"),
   DAYSI_RELIABILITY_REPOSITORY: repositoryModeSchema.default("memory"),
+  DAYSI_MARKET_INTELLIGENCE_REPOSITORY: repositoryModeSchema.default("memory"),
   DATABASE_URL: z.string().optional(),
   DATABASE_SSL: z.enum(["true", "false"]).default("false"),
   DATABASE_MAX_CONNECTIONS: z.coerce.number().int().positive().default(10),
@@ -41,6 +42,8 @@ const appEnvSchema = z.object({
   XAI_API_KEY: z.string().optional(),
   PERPLEXITY_API_KEY: z.string().optional(),
   KIMI_API_KEY: z.string().optional(),
+  DATAFORSEO_LOGIN: z.string().optional(),
+  DATAFORSEO_PASSWORD: z.string().optional(),
   AWS_REGION: z.string().default("us-east-1"),
   SES_FROM_EMAIL: z.string().email().optional(),
   SES_FROM_NAME: z.string().optional(),
@@ -73,6 +76,7 @@ export interface AppEnv {
   DAYSI_ENGAGEMENT_REPOSITORY: "memory" | "postgres";
   DAYSI_OPERATIONS_REPOSITORY: "memory" | "postgres";
   DAYSI_RELIABILITY_REPOSITORY: "memory" | "postgres";
+  DAYSI_MARKET_INTELLIGENCE_REPOSITORY: "memory" | "postgres";
   DATABASE_URL?: string;
   DATABASE_SSL: boolean;
   DATABASE_MAX_CONNECTIONS: number;
@@ -83,6 +87,8 @@ export interface AppEnv {
   XAI_API_KEY?: string;
   PERPLEXITY_API_KEY?: string;
   KIMI_API_KEY?: string;
+  DATAFORSEO_LOGIN?: string;
+  DATAFORSEO_PASSWORD?: string;
   AWS_REGION: string;
   SES_FROM_EMAIL?: string;
   SES_FROM_NAME?: string;
@@ -101,7 +107,8 @@ const usesPostgresPersistence = (env: AppEnv): boolean =>
   env.DAYSI_GROWTH_REPOSITORY === "postgres" ||
   env.DAYSI_ENGAGEMENT_REPOSITORY === "postgres" ||
   env.DAYSI_OPERATIONS_REPOSITORY === "postgres" ||
-  env.DAYSI_RELIABILITY_REPOSITORY === "postgres";
+  env.DAYSI_RELIABILITY_REPOSITORY === "postgres" ||
+  env.DAYSI_MARKET_INTELLIGENCE_REPOSITORY === "postgres";
 
 const hasExplicitValue = (
   source: NodeJS.ProcessEnv,
@@ -199,6 +206,11 @@ export const loadAppEnv = (source: NodeJS.ProcessEnv = process.env): AppEnv => {
     DAYSI_RELIABILITY_REPOSITORY: cutoverRepositoryMode(
       runtimeProfile,
       parsed.DAYSI_RELIABILITY_REPOSITORY,
+      "postgres",
+    ),
+    DAYSI_MARKET_INTELLIGENCE_REPOSITORY: cutoverRepositoryMode(
+      runtimeProfile,
+      parsed.DAYSI_MARKET_INTELLIGENCE_REPOSITORY,
       "postgres",
     ),
     DATABASE_SSL: parsed.DATABASE_SSL === "true",

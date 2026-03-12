@@ -324,6 +324,18 @@ export interface GenerateModuleContentInput {
   locationSlug: string;
   actorUserId?: string;
   now?: string;
+  // SEO grounding — enriches AI prompt with keyword context for organic search targeting
+  keywordGrounding?: {
+    primaryKeyword: string;
+    supportingKeywords: string[];
+    targetSearchVolume: number;
+  };
+  // Social trend grounding — when a viral topic triggered this module creation
+  socialTrendGrounding?: {
+    trendingTopic: string;
+    platform: string;
+    sentimentContext: string;
+  };
 }
 
 export interface AiGeneratedModuleContent {
@@ -430,6 +442,25 @@ export const buildModuleGenerationPrompt = (input: GenerateModuleContentInput): 
     ? "Include descriptions of visual aids, diagrams, or images where appropriate (marked with [IMAGE: description]).\n"
     : "";
 
+  const seoSection = input.keywordGrounding
+    ? `SEO Grounding (important — write naturally but optimise for search):
+- Primary keyword: "${input.keywordGrounding.primaryKeyword}" (${input.keywordGrounding.targetSearchVolume.toLocaleString()} searches/month)
+- Supporting keywords to weave in naturally: ${input.keywordGrounding.supportingKeywords.map((k) => `"${k}"`).join(", ")}
+- Ensure the primary keyword appears in the module title and the first lesson's H1 heading.
+- Do not keyword-stuff; write for humans first, search engines second.
+
+`
+    : "";
+
+  const trendSection = input.socialTrendGrounding
+    ? `Social Trend Context:
+- This module was triggered by a trending topic: "${input.socialTrendGrounding.trendingTopic}" on ${input.socialTrendGrounding.platform}
+- Sentiment: ${input.socialTrendGrounding.sentimentContext}
+- Frame the content to address the questions and concerns driving this trend. Be timely and relevant.
+
+`
+    : "";
+
   return `Create a comprehensive educational module on "${input.topic}".
 
 Target Audience: ${input.targetAudience === "staff" ? "Beauty/Medical Spa Staff" : input.targetAudience === "clients" ? "Clients/Customers" : "General Audience"}
@@ -438,7 +469,7 @@ Category: ${input.category}
 Number of Lessons: ${input.lessonCount}
 Tone: ${input.tone}
 
-${objectivesSection}${referenceSection}
+${seoSection}${trendSection}${objectivesSection}${referenceSection}
 Requirements:
 - Create ${input.lessonCount} structured lessons with clear progression
 - Each lesson should be 10-20 minutes of reading time
