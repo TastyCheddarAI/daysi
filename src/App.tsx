@@ -53,6 +53,7 @@ const DashboardReferrals = lazy(() => import("./pages/dashboard/Referrals"));
 const AdminAuth = lazy(() => import("./pages/AdminAuth"));
 const AdminLearning = lazy(() => import("./pages/admin/Learning"));
 const AdminEducationModules = lazy(() => import("./pages/admin/EducationModules"));
+const AdminIntelligence = lazy(() => import("./pages/admin/Intelligence"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -174,6 +175,7 @@ const App = () => {
                             <Route path="audit" element={<AdminAudit />} />
                             <Route path="intake-forms" element={<AdminIntakeForms />} />
                             <Route path="api-docs" element={<AdminAPIDocs />} />
+                            <Route path="intelligence" element={<AdminIntelligence />} />
                           </Route>
                           <Route path="*" element={<NotFound />} />
                         </Routes>

@@ -24,6 +24,7 @@ import {
   ClipboardList,
   BookOpen,
   Brain,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -88,6 +89,7 @@ const navGroups: NavGroup[] = [
     label: "Growth",
     items: [
       { path: "/admin/referrals", icon: Gift, label: "Referrals", staffAccess: false, associateAccess: false },
+      { path: "/admin/intelligence", icon: TrendingUp, label: "Intelligence", staffAccess: false, associateAccess: false },
     ],
   },
   {

@@ -2175,3 +2175,283 @@ export const exportDaysiAdminAuditLogs = async (input: {
 
   return response.blob();
 };
+
+// ==================== MARKET INTELLIGENCE ====================
+
+export interface DaysiKeywordSnapshot {
+  id: string;
+  service: string;
+  location: string;
+  keyword: string;
+  monthlySearchVolume: number;
+  competition: "LOW" | "MEDIUM" | "HIGH";
+  cpc: number;
+  trend: number[];
+  trendDirection: "RISING" | "STABLE" | "DECLINING";
+  serp: Array<{ rank: number; title: string; url: string; description: string }>;
+  scannedAt: string;
+}
+
+export interface DaysiCompetitorRecord {
+  id: string;
+  competitorName: string;
+  websiteUrl: string;
+  location: string;
+  services: string[];
+  pricing: Record<string, number>;
+  rating: number;
+  reviewCount: number;
+  educationContent: string[];
+  scannedAt: string;
+}
+
+export interface DaysiCompetitorAlert {
+  id: string;
+  competitorId: string;
+  competitorName: string;
+  changeType: "PRICE_CHANGE" | "NEW_SERVICE" | "NEW_CONTENT" | "RATING_CHANGE";
+  previousValue: string;
+  newValue: string;
+  significance: "LOW" | "MEDIUM" | "HIGH";
+  acknowledged: boolean;
+  detectedAt: string;
+}
+
+export interface DaysiSocialTrend {
+  id: string;
+  platform: "TWITTER" | "REDDIT" | "TIKTOK" | "INSTAGRAM";
+  topic: string;
+  relatedServices: string[];
+  sentimentScore: number;
+  velocity: number;
+  peakReachedAt: string | null;
+  scannedAt: string;
+}
+
+export interface DaysiContentSuggestion {
+  id: string;
+  title: string;
+  outline: string[];
+  sourceSignals: {
+    keywords?: string[];
+    competitorGap?: string;
+    trendTopic?: string;
+    trendPlatform?: string;
+  };
+  estimatedSearchVolume: number;
+  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  status: "PENDING" | "ACCEPTED" | "DISMISSED";
+  createdAt: string;
+}
+
+export interface DaysiMarketBrief {
+  id: string;
+  weekOf: string;
+  executiveSummary: string;
+  topKeywordOpportunities: DaysiKeywordSnapshot[];
+  competitorAlerts: DaysiCompetitorAlert[];
+  trendingTopics: DaysiSocialTrend[];
+  contentSuggestionsGenerated: number;
+  churnRisksIdentified: number;
+  generatedAt: string;
+}
+
+// ── Keyword scans ─────────────────────────────────────────────────────────────
+
+export const triggerDaysiIntelligenceKeywordScan = async (input: {
+  token: string;
+  services?: string[];
+  locations?: Array<{ name: string; code: number }>;
+}): Promise<{ snapshotsCreated: number; snapshots: DaysiKeywordSnapshot[] }> => {
+  const data = await authorizedFetch<{ ok: boolean; data: { snapshotsCreated: number; snapshots: DaysiKeywordSnapshot[] } }>(
+    input.token,
+    "/v1/admin/intelligence/scans/keywords",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ services: input.services, locations: input.locations }),
+    },
+  );
+  return data.data;
+};
+
+export const listDaysiIntelligenceKeywords = async (input: {
+  token: string;
+  service?: string;
+  location?: string;
+}): Promise<DaysiKeywordSnapshot[]> => {
+  const params = new URLSearchParams();
+  if (input.service) params.set("service", input.service);
+  if (input.location) params.set("location", input.location);
+  const data = await authorizedFetch<{ ok: boolean; data: { snapshots: DaysiKeywordSnapshot[] } }>(
+    input.token,
+    `/v1/admin/intelligence/keywords?${params.toString()}`,
+  );
+  return data.data.snapshots;
+};
+
+export const listDaysiIntelligenceKeywordOpportunities = async (input: {
+  token: string;
+  limit?: number;
+}): Promise<DaysiKeywordSnapshot[]> => {
+  const params = new URLSearchParams();
+  if (input.limit) params.set("limit", input.limit.toString());
+  const data = await authorizedFetch<{ ok: boolean; data: { snapshots: DaysiKeywordSnapshot[] } }>(
+    input.token,
+    `/v1/admin/intelligence/keywords/opportunities?${params.toString()}`,
+  );
+  return data.data.snapshots;
+};
+
+// ── Competitors ───────────────────────────────────────────────────────────────
+
+export const triggerDaysiIntelligenceCompetitorScan = async (input: {
+  token: string;
+  competitors: Array<{ name: string; websiteUrl: string; location: string }>;
+}): Promise<{ recordsCreated: number; records: DaysiCompetitorRecord[] }> => {
+  const data = await authorizedFetch<{ ok: boolean; data: { recordsCreated: number; records: DaysiCompetitorRecord[] } }>(
+    input.token,
+    "/v1/admin/intelligence/scans/competitors",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ competitors: input.competitors }),
+    },
+  );
+  return data.data;
+};
+
+export const listDaysiIntelligenceCompetitors = async (input: {
+  token: string;
+}): Promise<DaysiCompetitorRecord[]> => {
+  const data = await authorizedFetch<{ ok: boolean; data: { records: DaysiCompetitorRecord[] } }>(
+    input.token,
+    "/v1/admin/intelligence/competitors",
+  );
+  return data.data.records;
+};
+
+export const listDaysiIntelligenceCompetitorAlerts = async (input: {
+  token: string;
+}): Promise<DaysiCompetitorAlert[]> => {
+  const data = await authorizedFetch<{ ok: boolean; data: { alerts: DaysiCompetitorAlert[] } }>(
+    input.token,
+    "/v1/admin/intelligence/competitors/alerts",
+  );
+  return data.data.alerts;
+};
+
+export const acknowledgeDaysiIntelligenceCompetitorAlert = async (input: {
+  token: string;
+  alertId: string;
+}): Promise<void> => {
+  await authorizedFetch<{ ok: boolean }>(
+    input.token,
+    `/v1/admin/intelligence/competitors/alerts/${input.alertId}/acknowledge`,
+    { method: "POST" },
+  );
+};
+
+// ── Social trends ─────────────────────────────────────────────────────────────
+
+export const triggerDaysiIntelligenceSocialScan = async (input: {
+  token: string;
+  services?: string[];
+}): Promise<{ trendsDetected: number; trends: DaysiSocialTrend[] }> => {
+  const data = await authorizedFetch<{ ok: boolean; data: { trendsDetected: number; trends: DaysiSocialTrend[] } }>(
+    input.token,
+    "/v1/admin/intelligence/scans/social",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ services: input.services }),
+    },
+  );
+  return data.data;
+};
+
+export const listDaysiIntelligenceTrends = async (input: {
+  token: string;
+  minVelocity?: number;
+}): Promise<DaysiSocialTrend[]> => {
+  const params = new URLSearchParams();
+  if (input.minVelocity !== undefined) params.set("minVelocity", input.minVelocity.toString());
+  const data = await authorizedFetch<{ ok: boolean; data: { trends: DaysiSocialTrend[] } }>(
+    input.token,
+    `/v1/admin/intelligence/trends?${params.toString()}`,
+  );
+  return data.data.trends;
+};
+
+// ── Content suggestions ───────────────────────────────────────────────────────
+
+export const listDaysiIntelligenceContentSuggestions = async (input: {
+  token: string;
+}): Promise<DaysiContentSuggestion[]> => {
+  const data = await authorizedFetch<{ ok: boolean; data: { suggestions: DaysiContentSuggestion[] } }>(
+    input.token,
+    "/v1/admin/intelligence/content-suggestions",
+  );
+  return data.data.suggestions;
+};
+
+export const generateDaysiIntelligenceContentSuggestions = async (input: {
+  token: string;
+}): Promise<{ suggestionsCreated: number; suggestions: DaysiContentSuggestion[] }> => {
+  const data = await authorizedFetch<{ ok: boolean; data: { suggestionsCreated: number; suggestions: DaysiContentSuggestion[] } }>(
+    input.token,
+    "/v1/admin/intelligence/content-suggestions/generate",
+    { method: "POST" },
+  );
+  return data.data;
+};
+
+export const acceptDaysiIntelligenceContentSuggestion = async (input: {
+  token: string;
+  suggestionId: string;
+}): Promise<void> => {
+  await authorizedFetch<{ ok: boolean }>(
+    input.token,
+    `/v1/admin/intelligence/content-suggestions/${input.suggestionId}/accept`,
+    { method: "POST" },
+  );
+};
+
+export const dismissDaysiIntelligenceContentSuggestion = async (input: {
+  token: string;
+  suggestionId: string;
+}): Promise<void> => {
+  await authorizedFetch<{ ok: boolean }>(
+    input.token,
+    `/v1/admin/intelligence/content-suggestions/${input.suggestionId}/dismiss`,
+    { method: "POST" },
+  );
+};
+
+// ── Market brief ──────────────────────────────────────────────────────────────
+
+export const fetchDaysiIntelligenceLatestBrief = async (input: {
+  token: string;
+}): Promise<DaysiMarketBrief | null> => {
+  try {
+    const data = await authorizedFetch<{ ok: boolean; data: DaysiMarketBrief }>(
+      input.token,
+      "/v1/admin/intelligence/briefs/latest",
+    );
+    return data.data;
+  } catch (err) {
+    if (err instanceof DaysiAdminApiError && err.status === 404) return null;
+    throw err;
+  }
+};
+
+export const generateDaysiIntelligenceMarketBrief = async (input: {
+  token: string;
+}): Promise<DaysiMarketBrief> => {
+  const data = await authorizedFetch<{ ok: boolean; data: DaysiMarketBrief }>(
+    input.token,
+    "/v1/admin/intelligence/briefs/generate",
+    { method: "POST" },
+  );
+  return data.data;
+};
