@@ -355,7 +355,7 @@ resource "aws_ecs_task_definition" "api" {
       secrets = [
         {
           name      = "DATABASE_URL"
-          valueFrom = "arn:aws:secretsmanager:*:*:secret:${var.project_name}/${var.environment}/aurora/master-password"
+          valueFrom = var.database_url_secret_arn
         }
       ]
       logConfiguration = {
@@ -401,7 +401,7 @@ resource "aws_ecs_task_definition" "migrate" {
       secrets = [
         {
           name      = "DATABASE_URL"
-          valueFrom = "arn:aws:secretsmanager:*:*:secret:${var.project_name}/${var.environment}/aurora/master-password"
+          valueFrom = var.database_url_secret_arn
         }
       ]
       logConfiguration = {

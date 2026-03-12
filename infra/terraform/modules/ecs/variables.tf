@@ -78,6 +78,11 @@ variable "alarm_email" {
   default     = null
 }
 
+variable "database_url_secret_arn" {
+  description = "ARN of the Secrets Manager secret containing the full DATABASE_URL connection string"
+  type        = string
+}
+
 variable "tags" {
   description = "Common tags for all resources"
   type        = map(string)

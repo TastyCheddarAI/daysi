@@ -48,6 +48,7 @@ module "ecs" {
   max_capacity               = 10
   enable_deletion_protection = true
   alarm_email                = var.alarm_email
+  database_url_secret_arn    = module.aurora.database_url_secret_arn
   tags                       = local.common_tags
 }
 

@@ -36,6 +36,25 @@ resource "aws_secretsmanager_secret_version" "master_password" {
   })
 }
 
+# Store full DATABASE_URL connection string so ECS tasks can inject it directly
+resource "aws_secretsmanager_secret" "database_url" {
+  name                    = "${var.project_name}/${var.environment}/database-url"
+  description             = "Full DATABASE_URL connection string for Aurora PostgreSQL"
+  recovery_window_in_days = var.environment == "prod" ? 30 : 7
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${var.project_name}-${var.environment}-database-url"
+    }
+  )
+}
+
+resource "aws_secretsmanager_secret_version" "database_url" {
+  secret_id     = aws_secretsmanager_secret.database_url.id
+  secret_string = "postgresql://${var.master_username}:${urlencode(random_password.master.result)}@${aws_rds_cluster.aurora.endpoint}:${aws_rds_cluster.aurora.port}/${aws_rds_cluster.aurora.database_name}?sslmode=require"
+}
+
 # DB Subnet Group
 resource "aws_db_subnet_group" "aurora" {
   name        = "${var.project_name}-${var.environment}-aurora-subnet-group"

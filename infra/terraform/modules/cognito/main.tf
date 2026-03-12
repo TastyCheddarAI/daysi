@@ -116,6 +116,10 @@ resource "aws_cognito_user_pool" "main" {
       Name = "${var.project_name}-${var.environment}"
     }
   )
+
+  lifecycle {
+    ignore_changes = [schema]
+  }
 }
 
 # Cognito User Pool Domain

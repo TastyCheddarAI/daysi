@@ -33,6 +33,11 @@ output "master_password_secret_arn" {
   value       = aws_secretsmanager_secret.master_password.arn
 }
 
+output "database_url_secret_arn" {
+  description = "ARN of the Secrets Manager secret containing the full DATABASE_URL connection string"
+  value       = aws_secretsmanager_secret.database_url.arn
+}
+
 output "security_group_id" {
   description = "ID of the Aurora security group"
   value       = aws_security_group.aurora.id
