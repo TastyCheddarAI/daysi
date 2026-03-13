@@ -157,6 +157,7 @@ export const useAcceptDaysiContentSuggestion = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["intelligence", "content-suggestions"] });
     },
+    // Note: result contains keywordGrounding + socialTrendGrounding — use in onSuccess callback
   });
 };
 

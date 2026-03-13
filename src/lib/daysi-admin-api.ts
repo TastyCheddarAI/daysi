@@ -2406,15 +2406,31 @@ export const generateDaysiIntelligenceContentSuggestions = async (input: {
   return data.data;
 };
 
+export interface DaysiContentSuggestionAcceptResult {
+  accepted: boolean;
+  suggestion: DaysiContentSuggestion;
+  keywordGrounding?: {
+    primaryKeyword: string;
+    supportingKeywords: string[];
+    targetSearchVolume: number;
+  };
+  socialTrendGrounding?: {
+    trendingTopic: string;
+    platform: string;
+    sentimentContext: string;
+  };
+}
+
 export const acceptDaysiIntelligenceContentSuggestion = async (input: {
   token: string;
   suggestionId: string;
-}): Promise<void> => {
-  await authorizedFetch<{ ok: boolean }>(
+}): Promise<DaysiContentSuggestionAcceptResult> => {
+  const data = await authorizedFetch<{ ok: boolean; data: DaysiContentSuggestionAcceptResult }>(
     input.token,
     `/v1/admin/intelligence/content-suggestions/${input.suggestionId}/accept`,
     { method: "POST" },
   );
+  return data.data;
 };
 
 export const dismissDaysiIntelligenceContentSuggestion = async (input: {

@@ -74,6 +74,18 @@ export const educationContentGenerationRequestSchema = z.object({
   tone: z.enum(["professional", "conversational", "academic", "friendly"]).default("professional"),
   provider: aiProviderSchema.default("openai"),
   customPrompt: z.string().max(5000).optional(),
+  // SEO grounding — injected into the AI prompt to optimize for organic search
+  keywordGrounding: z.object({
+    primaryKeyword: z.string(),
+    supportingKeywords: z.array(z.string()),
+    targetSearchVolume: z.number().int().nonnegative(),
+  }).optional(),
+  // Social trend grounding — when a viral topic triggered this module
+  socialTrendGrounding: z.object({
+    trendingTopic: z.string(),
+    platform: z.string(),
+    sentimentContext: z.string(),
+  }).optional(),
 });
 
 export const educationContentGenerationResultSchema = z.object({

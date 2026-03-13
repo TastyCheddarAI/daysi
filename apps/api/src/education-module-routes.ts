@@ -571,6 +571,8 @@ export const handleEducationModuleRoutes = async (input: {
           tone: payload.tone,
           locationSlug: payload.locationSlug,
           actorUserId: input.actor?.userId,
+          keywordGrounding: payload.keywordGrounding,
+          socialTrendGrounding: payload.socialTrendGrounding,
         })
         .then(async (result) => {
           if (result.success && result.data) {

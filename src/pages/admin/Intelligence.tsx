@@ -18,7 +18,17 @@ import {
   BarChart2,
   Sparkles,
   Brain,
+  ArrowRight,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import type { DaysiContentSuggestionAcceptResult } from "@/lib/daysi-admin-api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -485,6 +495,7 @@ function ContentSuggestionsSection() {
   const accept = useAcceptDaysiContentSuggestion();
   const dismiss = useDismissDaysiContentSuggestion();
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [acceptedResult, setAcceptedResult] = useState<DaysiContentSuggestionAcceptResult | null>(null);
 
   const handleGenerate = () => {
     toast.promise(generate.mutateAsync(), {
@@ -496,9 +507,12 @@ function ContentSuggestionsSection() {
 
   const handleAccept = (id: string) => {
     accept.mutate(id, {
-      onSuccess: () => {
-        toast.success("Suggestion accepted — grounding data sent to education module flow");
+      onSuccess: (result) => {
+        setAcceptedResult(result);
         refetch();
+      },
+      onError: (e) => {
+        toast.error(`Failed: ${e instanceof Error ? e.message : "Unknown error"}`);
       },
     });
   };
@@ -513,6 +527,95 @@ function ContentSuggestionsSection() {
   };
 
   return (
+    <>
+    {/* Accept result dialog */}
+    <Dialog open={!!acceptedResult} onOpenChange={(open) => { if (!open) setAcceptedResult(null); }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <CheckCircle className="h-5 w-5 text-green-500" />
+            Suggestion Accepted
+          </DialogTitle>
+          <DialogDescription>
+            This topic is queued for education module generation with SEO grounding applied.
+          </DialogDescription>
+        </DialogHeader>
+
+        {acceptedResult && (
+          <div className="space-y-4 py-2">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Topic</p>
+              <p className="font-semibold text-sm">{acceptedResult.suggestion.title}</p>
+            </div>
+
+            {acceptedResult.keywordGrounding && (
+              <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-lg p-3 space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">SEO Keyword Grounding</p>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground w-20 shrink-0">Primary</span>
+                    <span className="text-sm font-mono bg-background border rounded px-2 py-0.5">
+                      {acceptedResult.keywordGrounding.primaryKeyword}
+                    </span>
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      {formatVolume(acceptedResult.keywordGrounding.targetSearchVolume)}/mo
+                    </span>
+                  </div>
+                  {acceptedResult.keywordGrounding.supportingKeywords.length > 0 && (
+                    <div className="flex items-start gap-2">
+                      <span className="text-xs text-muted-foreground w-20 shrink-0 pt-0.5">Supporting</span>
+                      <div className="flex flex-wrap gap-1">
+                        {acceptedResult.keywordGrounding.supportingKeywords.map((k) => (
+                          <span key={k} className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded px-1.5 py-0.5">
+                            {k}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {acceptedResult.socialTrendGrounding && (
+              <div className="bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 rounded-lg p-3 space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-purple-700 dark:text-purple-300">Social Trend Grounding</p>
+                <p className="text-sm">
+                  <span className="font-medium">{acceptedResult.socialTrendGrounding.trendingTopic}</span>
+                  <span className="text-muted-foreground ml-2">via {acceptedResult.socialTrendGrounding.platform}</span>
+                </p>
+                <p className="text-xs text-muted-foreground">{acceptedResult.socialTrendGrounding.sentimentContext}</p>
+              </div>
+            )}
+
+            {acceptedResult.suggestion.outline.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Module Outline</p>
+                <ol className="list-decimal list-inside space-y-0.5">
+                  {acceptedResult.suggestion.outline.map((item, i) => (
+                    <li key={i} className="text-sm text-muted-foreground">{item}</li>
+                  ))}
+                </ol>
+              </div>
+            )}
+          </div>
+        )}
+
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => setAcceptedResult(null)}>Close</Button>
+          <Button
+            onClick={() => {
+              setAcceptedResult(null);
+              window.open("/admin/education", "_self");
+            }}
+          >
+            <ArrowRight className="h-4 w-4 mr-2" />
+            Go to Education
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
@@ -611,6 +714,7 @@ function ContentSuggestionsSection() {
         )}
       </CardContent>
     </Card>
+    </>
   );
 }
 
