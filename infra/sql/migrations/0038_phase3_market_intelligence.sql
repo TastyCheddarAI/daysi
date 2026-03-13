@@ -5,7 +5,7 @@
 -- ── Keyword demand snapshots (DataForSEO) ───────────────────────────────────
 
 create table if not exists mi_keyword_snapshots (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   service text not null,
   location text not null,
   keyword text not null,
@@ -28,7 +28,7 @@ create index if not exists mi_keyword_snapshots_volume_idx
 -- ── Competitor clinic records (Perplexity) ──────────────────────────────────
 
 create table if not exists mi_competitor_records (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   competitor_name text not null,
   website_url text not null,
   location text not null,
@@ -48,8 +48,8 @@ create unique index if not exists mi_competitor_records_name_location_idx
 -- ── Competitor change alerts ─────────────────────────────────────────────────
 
 create table if not exists mi_competitor_alerts (
-  id text primary key,
-  competitor_id text not null references mi_competitor_records(id) on delete cascade,
+  id uuid primary key default gen_random_uuid(),
+  competitor_id uuid not null references mi_competitor_records(id) on delete cascade,
   competitor_name text not null,
   change_type text not null check (change_type in ('PRICE_CHANGE', 'NEW_SERVICE', 'NEW_CONTENT', 'RATING_CHANGE')),
   previous_value text not null,
@@ -67,7 +67,7 @@ create index if not exists mi_competitor_alerts_unacked_idx
 -- ── Social trend records (xAI/Grok) ─────────────────────────────────────────
 
 create table if not exists mi_social_trends (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   platform text not null check (platform in ('TWITTER', 'REDDIT', 'TIKTOK', 'INSTAGRAM')),
   topic text not null,
   related_services jsonb not null default '[]'::jsonb,  -- string[]
@@ -87,7 +87,7 @@ create index if not exists mi_social_trends_recent_idx
 -- ── Content suggestions (bridge: signals → education modules) ────────────────
 
 create table if not exists mi_content_suggestions (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   title text not null,
   outline jsonb not null default '[]'::jsonb,         -- string[]
   source_signals jsonb not null default '{}'::jsonb,  -- { keywords?, competitorGap?, trendTopic?, trendPlatform? }
@@ -124,7 +124,7 @@ create index if not exists mi_customer_journeys_churn_idx
 -- ── Market brief reports (OpenAI weekly synthesis) ───────────────────────────
 
 create table if not exists mi_market_briefs (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   week_of date not null unique,
   executive_summary text not null,
   top_keyword_opportunities jsonb not null default '[]'::jsonb,  -- KeywordDemandSnapshot[]

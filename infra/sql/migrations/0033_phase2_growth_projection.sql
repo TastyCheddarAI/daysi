@@ -1,5 +1,5 @@
 create table if not exists growth_referral_program_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
   location_slug text not null,
@@ -18,7 +18,7 @@ create index if not exists growth_referral_program_projection_location_idx
   on growth_referral_program_projection (location_slug, updated_at desc);
 
 create table if not exists growth_referral_code_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   program_id text not null,
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
@@ -37,7 +37,7 @@ create index if not exists growth_referral_code_projection_owner_idx
   on growth_referral_code_projection (lower(owner_email), location_slug);
 
 create table if not exists growth_referral_relationship_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   program_id text not null,
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
@@ -60,7 +60,7 @@ create index if not exists growth_referral_relationship_projection_location_idx
   on growth_referral_relationship_projection (location_slug, created_at desc);
 
 create table if not exists growth_referral_reward_event_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   program_id text not null,
   relationship_id text not null,
   brand_id uuid not null references brand(id) on delete cascade,

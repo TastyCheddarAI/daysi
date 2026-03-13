@@ -1,5 +1,5 @@
 create table if not exists commerce_service_package_purchase_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
   location_slug text not null,
@@ -31,11 +31,11 @@ create index if not exists commerce_service_package_purchase_projection_source_o
   where source_order_id is not null;
 
 create table if not exists commerce_service_package_usage_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
   location_slug text not null,
-  package_purchase_id text not null
+  package_purchase_id uuid not null
     references commerce_service_package_purchase_projection(id) on delete cascade,
   package_slug text not null,
   service_slug text not null,
@@ -57,7 +57,7 @@ create index if not exists commerce_service_package_usage_projection_source_orde
   where source_order_id is not null;
 
 create table if not exists commerce_credit_entry_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
   location_slug text not null,

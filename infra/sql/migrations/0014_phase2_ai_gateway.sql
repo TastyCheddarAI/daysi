@@ -1,8 +1,8 @@
 create table if not exists ai_run (
-  id text primary key,
-  brand_id text not null references brand(id) on delete cascade,
-  location_id text not null references location(id) on delete cascade,
-  actor_user_id text references app_user(id) on delete set null,
+  id uuid primary key default gen_random_uuid(),
+  brand_id uuid not null references brand(id) on delete cascade,
+  location_id uuid not null references location(id) on delete cascade,
+  actor_user_id uuid references app_user(id) on delete set null,
   task_key text not null,
   provider_key text not null,
   model_key text not null,

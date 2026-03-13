@@ -1,5 +1,5 @@
 create table if not exists clinical_ai_run (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
   location_slug text not null,
@@ -20,7 +20,7 @@ create index if not exists clinical_ai_run_location_idx
   on clinical_ai_run (location_slug, created_at desc);
 
 create table if not exists clinical_skin_assessment_intake (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
   location_slug text not null,
@@ -45,8 +45,8 @@ create index if not exists clinical_skin_assessment_intake_location_customer_idx
   on clinical_skin_assessment_intake (location_slug, customer_email, received_at desc);
 
 create table if not exists clinical_skin_assessment (
-  id text primary key,
-  raw_intake_id text not null unique
+  id uuid primary key default gen_random_uuid(),
+  raw_intake_id uuid not null unique
     references clinical_skin_assessment_intake(id) on delete cascade,
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
@@ -84,15 +84,15 @@ create index if not exists clinical_skin_assessment_raw_intake_idx
   on clinical_skin_assessment (raw_intake_id);
 
 create table if not exists clinical_treatment_plan (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
   location_slug text not null,
   customer_email text not null,
   customer_name text,
-  source_assessment_id text not null
+  source_assessment_id uuid not null
     references clinical_skin_assessment(id) on delete restrict,
-  source_ai_run_id text not null
+  source_ai_run_id uuid not null
     references clinical_ai_run(id) on delete restrict,
   status text not null check (status in ('draft', 'shared', 'accepted', 'archived')),
   summary text not null,

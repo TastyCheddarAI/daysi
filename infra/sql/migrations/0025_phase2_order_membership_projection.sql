@@ -1,5 +1,5 @@
 create table if not exists commerce_order_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
   location_slug text not null,
@@ -42,7 +42,7 @@ create index if not exists commerce_order_projection_customer_idx
   on commerce_order_projection (location_slug, customer_email, updated_at desc);
 
 create table if not exists commerce_membership_subscription_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
   location_slug text not null,
@@ -70,11 +70,11 @@ create index if not exists commerce_membership_subscription_projection_order_idx
   where source_order_id is not null;
 
 create table if not exists commerce_membership_usage_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
   location_slug text not null,
-  subscription_id text not null
+  subscription_id uuid not null
     references commerce_membership_subscription_projection(id) on delete cascade,
   plan_slug text not null,
   service_slug text not null,

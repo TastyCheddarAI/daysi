@@ -1,5 +1,5 @@
 create table if not exists analytics_operational_metric_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
   location_slug text not null,

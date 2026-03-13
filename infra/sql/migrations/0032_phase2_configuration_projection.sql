@@ -1,5 +1,5 @@
 create table if not exists configuration_tenant_setting_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
   location_slug text not null,
@@ -15,7 +15,7 @@ create index if not exists configuration_tenant_setting_projection_location_idx
   on configuration_tenant_setting_projection (location_slug, setting_key, updated_at desc);
 
 create table if not exists configuration_access_assignment_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   email text not null,
   role text not null,
   location_scopes jsonb not null default '[]'::jsonb,

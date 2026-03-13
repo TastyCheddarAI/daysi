@@ -1,5 +1,5 @@
 create table if not exists operations_admin_action_log_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid references brand(id) on delete cascade,
   location_id uuid references location(id) on delete cascade,
   location_slug text,
@@ -21,7 +21,7 @@ create index if not exists operations_admin_action_log_projection_action_idx
   on operations_admin_action_log_projection (action, occurred_at desc);
 
 create table if not exists operations_support_case_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
   location_slug text not null,
@@ -43,7 +43,7 @@ create index if not exists operations_support_case_projection_location_idx
   on operations_support_case_projection (location_slug, updated_at desc);
 
 create table if not exists operations_support_case_event_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   support_case_id text not null,
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
@@ -62,7 +62,7 @@ create index if not exists operations_support_case_event_projection_case_idx
   on operations_support_case_event_projection (support_case_id, created_at asc);
 
 create table if not exists operations_import_job_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
   location_slug text not null,
@@ -85,7 +85,7 @@ create index if not exists operations_import_job_projection_location_idx
   on operations_import_job_projection (location_slug, created_at desc);
 
 create table if not exists operations_import_mapping_profile_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
   location_slug text not null,
@@ -104,7 +104,7 @@ create index if not exists operations_import_mapping_profile_projection_location
   on operations_import_mapping_profile_projection (location_slug, name asc);
 
 create table if not exists operations_reconciliation_issue_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   import_job_id text not null,
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,

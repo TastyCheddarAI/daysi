@@ -1,5 +1,5 @@
 create table if not exists engagement_customer_event_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
   location_slug text not null,
@@ -21,7 +21,7 @@ create index if not exists engagement_customer_event_projection_event_type_idx
   on engagement_customer_event_projection (event_type, occurred_at desc);
 
 create table if not exists engagement_waitlist_projection (
-  id text primary key,
+  id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brand(id) on delete cascade,
   location_id uuid not null references location(id) on delete cascade,
   location_slug text not null,

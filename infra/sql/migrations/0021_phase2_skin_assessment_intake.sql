@@ -1,6 +1,6 @@
 create table if not exists skin_assessment_intake (
-  id text primary key,
-  location_slug text not null references tenant_location(slug),
+  id uuid primary key default gen_random_uuid(),
+  location_slug text not null,
   source_app text not null,
   event_id text not null,
   event_type text not null,
@@ -21,9 +21,9 @@ create index if not exists skin_assessment_intake_location_customer_idx
   on skin_assessment_intake (location_slug, customer_email, received_at desc);
 
 create table if not exists skin_assessment (
-  id text primary key,
-  intake_id text not null unique references skin_assessment_intake(id) on delete cascade,
-  location_slug text not null references tenant_location(slug),
+  id uuid primary key default gen_random_uuid(),
+  intake_id uuid not null unique references skin_assessment_intake(id) on delete cascade,
+  location_slug text not null,
   source_app text not null,
   event_id text not null,
   external_assessment_id text not null,

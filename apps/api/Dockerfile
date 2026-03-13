@@ -35,6 +35,7 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/apps ./apps
 COPY --from=builder /app/tsconfig.json ./
+COPY infra/sql/migrations ./infra/sql/migrations
 
 # Set environment
 ENV NODE_ENV=production
